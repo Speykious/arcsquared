@@ -1,10 +1,15 @@
 /** Abstract class representing the input stream of every parser you're gonna create. */
 export default abstract class PStream<T> {
-  /** Internal index that keeps track of the current element of the stream. */
-  public index: number;
+  /** Protected index that keeps track of the current element of the stream. */
+  protected _index: number;
 
   constructor() {
-    this.index = 0;
+    this._index = 0;
+  }
+
+  /** Index that keeps track of the current element of the stream. */
+  get index(): number {
+    return this._index;
   }
 
   /** Gives the length of the entire steam. */
@@ -20,8 +25,8 @@ export default abstract class PStream<T> {
    * If there is no next element (a.k.a. null), it won't increment the internal index.
    */
   next(): T | null {
-    const nextElement = this.elementAt(this.index + 1);
-    if (nextElement) this.index++;
+    const nextElement = this.elementAt(this._index + 1);
+    if (nextElement) this._index++;
     return nextElement;
   }
 
@@ -30,9 +35,9 @@ export default abstract class PStream<T> {
    * @param n the number of maximum next elements to get.
    */
   nexts(n: number): T[] {
-    const start = this.index;
+    const start = this._index;
     const nextElements: T[] = [];
-    for (let nel = this.next(); this.index - start < n && nel; nel = this.next())
+    for (let nel = this.next(); this._index - start < n && nel; nel = this.next())
       nextElements.push(nel);
     return nextElements;
   }
