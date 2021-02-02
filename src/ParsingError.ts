@@ -47,7 +47,7 @@ export default class ParsingError {
   }
   
   /**
-   * Returns the props of the error.
+   * Returns the props of the parsing error.
    * Useful when creating a child-error keeping properties intact.
    */
   get props(): ParsingErrorProps {
