@@ -20,6 +20,7 @@ export default class ParsingError {
    * It is preferable to use this variable instead of accessing `errObj.constructor.name` in case the code gets minified.
    */
   static readonly errorName: string = "ParsingError";
+  /** Change this flag if you want the default value of the `colored` property of new `ParsingError`s to be true. */
   static defaultColoring: boolean = false;
 
   /** The origin of the error, like the parser combinator that produced it. */
@@ -59,8 +60,8 @@ export default class ParsingError {
     };
   }
   
-  private get optionalColor(): <T>(f: (arg: T) => T) => (arg: T) => T {
-    return optionalTransform(this.colored)
+  protected get optionalColor(): <T>(f: (arg: T) => T) => (arg: T) => T {
+    return optionalTransform(this.colored);
   }
 
   describe(): string {
