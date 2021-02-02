@@ -1,7 +1,8 @@
 import { optionalTransform } from "./helpers"
 import { red, green, bold } from "ansi-colors-ts";
 
-type ParsingErrorProps = {
+/** Necessary props to instantiate a new `ParsingError`. */
+export interface ParsingErrorProps {
   from?: string | null;
   index: number;
   expected?: string | null;
