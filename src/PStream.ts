@@ -1,5 +1,5 @@
 /** Abstract class representing the input stream of every parser you're gonna create. */
-abstract class PStream<T> {
+export default abstract class PStream<T> {
   /** Internal index that keeps track of the current element of the stream. */
   public index: number;
 
