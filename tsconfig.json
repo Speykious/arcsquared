@@ -9,7 +9,7 @@
     "rootDir": "./src",
     "newLine": "lf",
     "pretty": true,
-    "outDir": "./lib",
+    "outDir": "./dist",
     "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,

@@ -1,10 +1,10 @@
 {
   "version": "0.1.0",
   "license": "MIT",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "type": "module",
-  "files": ["lib"],
+  "files": ["dist"],
   "engines": {
     "node": ">=10"
   },
@@ -31,15 +31,15 @@
   "name": "arcsquared",
   "description": "Rewriting Arcthird in Typescript, which is the rewriting of Arcsecond in Coffeescript.",
   "author": "Speykious <speykious@gmail.com>",
-  "module": "lib/arcsquared.esm.js",
+  "module": "dist/arcsquared.esm.js",
   "repository": "https://gitlab.com/yeetsquared/arcsquared",
   "size-limit": [
     {
-      "path": "lib/arcsquared.cjs.production.min.js",
+      "path": "dist/arcsquared.cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "lib/arcsquared.esm.js",
+      "path": "dist/arcsquared.esm.js",
       "limit": "10 KB"
     }
   ],
