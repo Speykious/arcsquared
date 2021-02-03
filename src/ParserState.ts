@@ -26,6 +26,11 @@ export default class ParserState<T, D, R> {
     this.result = props.result ?? null;
   }
 
+  /** Index that keeps track of the current element of the target stream. */
+  get index(): number {
+    return this.target.index;
+  }
+
   /**
    * Returns the props of the parser state.
    * Useful when creating a new parser state based on another one by only changing some properties.
@@ -33,7 +38,7 @@ export default class ParserState<T, D, R> {
    */
   get props(): ParserStateProps<T, D, R> {
     return {
-      target: this.target,
+      target: this.target.clone(),
       data: this.data,
       error: this.error,
       result: this.result
