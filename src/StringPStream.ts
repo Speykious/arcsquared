@@ -14,7 +14,7 @@ export default class StringPStream extends PStream<number> {
   /** Dataview, as it is a more convenient way to take a string as a stream. */
   readonly dataView: DataView;
 
-  constructor(target: string | ArrayBuffer | TypedArray) {
+  constructor(target: string | DataView | ArrayBuffer | TypedArray) {
     super();
     
     if (typeof target === "string")
@@ -26,8 +26,8 @@ export default class StringPStream extends PStream<number> {
     else
       this.dataView = new DataView(target.buffer);
   }
-  
-  get length() {
+
+  get length(): number {
     return this.dataView.byteLength;
   }
   
@@ -37,6 +37,12 @@ export default class StringPStream extends PStream<number> {
     } catch (e) {
       return null;
     }
+  }
+
+  clone(): StringPStream {
+    const stream = new StringPStream(this.dataView);
+    stream._index = this._index;
+    return stream;
   }
 
   /**

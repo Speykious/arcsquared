@@ -19,6 +19,9 @@ export default abstract class PStream<T> {
    * @param i The index where the element is.
    */
   abstract elementAt(i: number): T | null;
+  
+  /** Safely clones the current `PStream`. */
+  abstract clone(): PStream<T>;
 
   /**
    * Gives the next element of the stream.
