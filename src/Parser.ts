@@ -2,18 +2,18 @@ import ParserState from "./ParserState";
 import ParsingError from "./ParsingError";
 import PStream from "./PStream";
 
-export type ParsingFunction<T, D, E, R, S> = (state: ParserState<T, D, R>) => ParserState<T, E, S>;
+export type ParsingFunction<T, D, R> = (state: ParserState<T, D, unknown>) => ParserState<T, D, R>;
 
-export default class Parser<T, D, E, R, S> {
+export default class Parser<T, D, R> {
   /** The state transformer of the parser. */
-  private pf: ParsingFunction<T, D, E, R, S>;
+  private pf: ParsingFunction<T, D, R>;
 
-  constructor(pf: ParsingFunction<T, D, E, R, S>) {
+  constructor(pf: ParsingFunction<T, D, R>) {
     this.pf = pf;
   }
 
   /** Parses a `PStream` target. */
-  parse(target: PStream<T>): ParserState<T, E, S> {
+  parse(target: PStream<T>): ParserState<T, D, R> {
     return this.pf(new ParserState({ target }));
   }
 
@@ -24,37 +24,39 @@ export default class Parser<T, D, E, R, S> {
    */
   fork<A, B>(
     target: PStream<T>,
-    errf: (errorState: ParserState<T, E, null>) => A,
-    succf: (successState: ParserState<T, E, S>) => B
+    errf: (errorState: ParserState<T, D, null>) => A,
+    succf: (successState: ParserState<T, D, R>) => B
   ): A | B {
     const state = this.parse(target);
     return state.error
-      ? errf(state as unknown as ParserState<T, E, null>)
-      : succf(state as ParserState<T, E, S>);
+      ? errf(state as unknown as ParserState<T, D, null>)
+      : succf(state as ParserState<T, D, R>);
   }
 
   /** Applies a function to the result when the parsed state is not an error. */
-  map<U>(f: (result: S) => U): Parser<T, D, E, R, U> {
+  map<S>(f: (result: R) => S): Parser<T, D, S> {
     const pf = this.pf;
     return new Parser(s => {
+      if (s.error) return s;
       const state = pf(s);
       return (
         state.error
         ? state
-        : state.resultify(f(state.result as S))
-      ) as ParserState<T, E, U>;
-    });
+        : state.resultify(f(state.result as R))
+      ) as ParserState<T, D, S>;
+    }) as Parser<T, D, S>;
   }
 
   /** Filters results using a predicate, and produces an error when that predicate returns false. */
   filter(
-    p: (result: S) => boolean,
-    emap?: (errorState: ParserState<T, E, S>) => ParsingError
-  ): Parser<T, D, E, R, S> {
+    p: (result: R) => boolean,
+    emap?: (errorState: ParserState<T, D, R>) => ParsingError
+  ): Parser<T, D, R> {
     const pf = this.pf;
     return new Parser(s => {
+      if (s.error) return s;
       const state = pf(s);
-      if (state.error || p(state.result as S))
+      if (state.error || p(state.result as R))
         return state;
       else if (emap)
         return state.errorify(emap(state));
@@ -63,6 +65,96 @@ export default class Parser<T, D, E, R, S> {
           index: state.index,
           message: `Result '${state.result}' did not validate the predicate`
         }));
-    }) as Parser<T, D, E, R, S>;
+    }) as Parser<T, D, R>;
+  }
+  
+  /** Chooses the next parser based on the parsed result. */
+  chain<S>(f: (result: R) => Parser<T, D, S>): Parser<T, D, S> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.error
+        ? state as unknown as ParserState<T, D, null>
+        : f(state.result as R).pf(state);
+    }) as Parser<T, D, S>;
+  }
+  
+  /** Takes a parser of function and applies its parsed function to the parsed result of the current parser. */
+  ap<S>(poff: Parser<T, D, (a: R) => S>): Parser<T, D, S> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const argState = pf(s);
+      if (argState.error) return argState;
+      const funState = poff.pf(argState);
+      if (funState.error) return funState;
+      return funState.resultify(
+        (funState.result as (a: R) => S)(argState.result as R)
+      );
+    }) as Parser<T, D, S>;
+  }
+
+  /** Maps the error of the parser. */
+  errorMap(f: (errorState: ParserState<T, D, null>) => ParsingError): Parser<T, D, R> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.error
+        ? state.errorify(f(state as unknown as ParserState<T, D, null>))
+        : state;
+    }) as Parser<T, D, R>;
+  }
+  
+  /** Chooses the next parser based on the parsed error. */
+  errorChain(f: (errorState: ParserState<T, D, null>) => Parser<T, D, R>): Parser<T, D, R> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.error
+        ? f(state as unknown as ParserState<T, D, null>).pf(state)
+        : state;
+    }) as Parser<T, D, R>;
+  }
+
+  /** Maps the result using the data of the parser. */
+  mapFromData<S>(f: (data: D | null, result: R) => S): Parser<T, D, S> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.error
+        ? state as unknown as ParserState<T, D, null>
+        : state.resultify(f(state.data, state.result as R));
+    }) as Parser<T, D, S>;
+  }
+  
+  /** Chooses the next parser based on the parsed result, and using the parser's data. */
+  chainFromData<S>(f: (data: D | null, result: R) => Parser<T, D, S>): Parser<T, D, S> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.error
+        ? state as unknown as ParserState<T, D, null>
+        : f(state.data, state.result as R).pf(state);
+    }) as Parser<T, D, S>;
+  }
+  
+  /** Maps the data of the parser. The data has to be of the same type. */
+  mapData(f: (data: D | null) => D): Parser<T, D, R> {
+    const pf = this.pf;
+    return new Parser(s => {
+      if (s.error) return s;
+      const state = pf(s);
+      return state.dataify(f(state.data));
+    }) as Parser<T, D, R>;
+  }
+  
+  /** Creates a parser that returns a value right ahead. */
+  static of<X>(x: X): Parser<unknown, null, X> {
+    return new Parser(s => s.resultify(x));
   }
 }
