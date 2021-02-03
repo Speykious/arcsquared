@@ -1,3 +1,5 @@
+import { inspect } from "util"
+
 export type TypedArray
   = Uint8Array
   | Int8Array
@@ -19,3 +21,20 @@ export const reDigits = /^[0-9]+/;
 export const reLetter = /[a-zA-Z]/;
 export const reLetters = /^[a-zA-Z]+/;
 export const reWhitespaces = /^\s+/;
+
+export function charLength(str: string): number {
+  let total = 0, i = 0;
+  while (i < str.length) {
+    let cp = str.codePointAt(i);
+    while (cp) {
+      cp >>= 8;
+      i++;
+    }
+    total++;
+  }
+  return total;
+}
+
+export function insp(o: Object): string {
+  return inspect(o, false, 4);
+}
