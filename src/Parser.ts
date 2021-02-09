@@ -2,7 +2,10 @@ import ParserState from "./ParserState";
 import ParsingError from "./ParsingError";
 import PStream from "./PStream";
 
-export type ParsingFunction<T, D, R> = (state: ParserState<T, D, unknown>) => ParserState<T, D, R>;
+/** The core of the Parser object. */
+export type ParsingFunction<T, D, R> = (state: ParserState<T, unknown, unknown>) => ParserState<T, D, R>;
+/** An array of different generic parsers. */
+export type ParserTuple<T, D, R extends any[]> = { [K in keyof R]: Parser<T, D, R[K]> }
 
 export default class Parser<T, D, R> {
   /** The state transformer of the parser. */
@@ -144,17 +147,16 @@ export default class Parser<T, D, R> {
   }
   
   /** Maps the data of the parser. The data has to be of the same type. */
-  mapData(f: (data: D | null) => D): Parser<T, D, R> {
+  mapData<E>(f: (data: D | null) => E): Parser<T, E, R> {
     const pf = this.pf;
     return new Parser(s => {
-      if (s.error) return s;
       const state = pf(s);
       return state.dataify(f(state.data));
-    }) as Parser<T, D, R>;
+    });
   }
   
   /** Creates a parser that returns a value right ahead. */
-  static of<X>(x: X): Parser<unknown, null, X> {
+  static of<T, X>(x: X): Parser<T, unknown, X> {
     return new Parser(s => s.resultify(x));
   }
 }
