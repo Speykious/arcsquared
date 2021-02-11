@@ -9,6 +9,11 @@ export interface ParserStateProps<T, D, R> {
   result?: R | null;
 }
 
+/** Type representing a successful parser state. */
+export type SuccessState<T, D, R> = ParserState<T, D, R> & { error: null; result: R; };
+/** Type representing an unsuccessful parser state. */
+export type ErrorState<T, D> = ParserState<T, D, null> & { error: ParsingError; };
+
 /**
  * Class representing a parser state.
  * It is composed of a target parser stream, some associated data, an error and some parsed result.
@@ -46,21 +51,21 @@ export default class ParserState<T, D, R> {
   }
 
   /** Returns a new `ParserState` based on the current one while changing the result property. */
-  resultify<S>(result: S): ParserState<T, D, S> {
+  resultify<S>(result: S): SuccessState<T, D, S> {
     return new ParserState({
       ...this.props,
       error: null,
       result
-    });
+    }) as SuccessState<T, D, S>;
   }
   
   /** Returns a new `ParserState` based on the current one while changing the error property. */
-  errorify(error: ParsingError | null): ParserState<T, D, null> {
+  errorify(error: ParsingError): ErrorState<T, D> {
     return new ParserState({
       ...this.props,
       error,
       result: null
-    });
+    }) as ErrorState<T, D>;
   }
   
   /** Returns a new `ParserState` based on the current one while changing the data property. */
