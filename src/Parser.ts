@@ -14,6 +14,10 @@ export type PairedResults<R> = { [key: string]: R[keyof R] };
 /** Yielder of parsers, which behaves very similarly to monads in functional programming. */
 export type ParserMonad<T, D, R> = Generator<Parser<T, D, unknown>, R, unknown>;
 
+/**
+ * The most important class of this library: the parser class, which contains a parser function.
+ * You will use it to parse a target input of a certain type T, and then either get back some result R or some parsing error, eventually using additional data. For example, you could store the line number and character index of the thing being parsed.
+ */
 export default class Parser<T, D, R> {
   /** The state transformer of the parser. */
   pf: ParsingFunction<T, D, R>;
