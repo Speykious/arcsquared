@@ -11,6 +11,8 @@ export type ParserTuple<T, D, R extends any[]> = { [K in keyof R]: Parser<T, D, 
 export type PairedParsers<T, D, R> = { [K in keyof R]: [string, Parser<T, D, R[K]>] };
 /** An object of results indexed by string keys. */
 export type PairedResults<R> = { [key: string]: R[keyof R] };
+/** Yielder of parsers, which behaves very similarly to monads in functional programming. */
+export type ParserMonad<T, D, R> = Generator<Parser<T, D, unknown>, R, unknown>;
 
 export default class Parser<T, D, R> {
   /** The state transformer of the parser. */
