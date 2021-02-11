@@ -4,12 +4,17 @@ import PStream from "./PStream";
 
 /** The core of the Parser object. */
 export type ParsingFunction<T, D, R> = (state: ParserState<T, unknown, unknown>) => ParserState<T, D, R>;
+
 /** An array of different generic parsers. */
 export type ParserTuple<T, D, R extends any[]> = { [K in keyof R]: Parser<T, D, R[K]> }
+/** An array of parsers paired with strings. */
+export type PairedParsers<T, D, R> = { [K in keyof R]: [string, Parser<T, D, R[K]>] };
+/** An object of results indexed by string keys. */
+export type PairedResults<R> = { [key: string]: R[keyof R] };
 
 export default class Parser<T, D, R> {
   /** The state transformer of the parser. */
-  private pf: ParsingFunction<T, D, R>;
+  pf: ParsingFunction<T, D, R>;
 
   constructor(pf: ParsingFunction<T, D, R>) {
     this.pf = pf;
