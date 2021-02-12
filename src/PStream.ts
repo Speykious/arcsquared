@@ -39,10 +39,13 @@ export default abstract class PStream<T> {
    * @param n the number of maximum next elements to get.
    */
   nexts(n: number): T[] {
-    const start = this._index;
     const nextElements: T[] = [];
-    for (let nel = this.next(); this._index - start < n && nel; nel = this.next())
+    let nel: T | null;
+    for (let i = 0; i < n; i++) {
+      nel = this.next();
+      if (!nel) break;
       nextElements.push(nel);
+    }
     return nextElements;
   }
 }
