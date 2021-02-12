@@ -59,21 +59,25 @@ describe("PStream", () => {
     it("has the right length", () => {
       expect(stream.length).toEqual(array.length);
     });
+
     it("gives the correct elements", () => {
       expect(stream.elementAt(0)).toEqual(1);
       expect(stream.elementAt(2)).toEqual(3);
       expect(stream.elementAt(4)).toBeNull();
     });
+
     it("gives the next element properly", () => {
       const firstElement = stream.next();
       expect(firstElement).toEqual(1);
       expect(stream.index).toEqual(1);
     });
+
     it("gives next elements properly", () => {
       const elements = stream.nexts(5);
       expect(elements).toEqual([2, 3, 4]);
       expect(stream.index).toEqual(4);
     });
+
     it("gives nothing when no elements are left", () => {
       const nothing = stream.next();
       expect(nothing).toBeNull();
@@ -93,21 +97,25 @@ describe("PStream", () => {
     it("has the right length", () => {
       expect(stream.length).toEqual(array.length);
     });
+
     it("gives the correct elements", () => {
       expect(stream.elementAt(0)).toEqual(array[0]);
       expect(stream.elementAt(2)).toEqual(array[2]);
       expect(stream.elementAt(4)).toBeNull();
     });
+
     it("gives the next element properly", () => {
       const firstElement = stream.next();
       expect(firstElement).toEqual(array[0]);
       expect(stream.index).toEqual(1);
     });
+
     it("gives next elements properly", () => {
       const elements = stream.nexts(5);
       expect(elements).toEqual(array.slice(1, 4));
       expect(stream.index).toEqual(4);
     });
+    
     it("gives nothing when no elements are left", () => {
       const nothing = stream.next();
       expect(nothing).toBeNull();
