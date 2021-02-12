@@ -14,6 +14,7 @@ export default abstract class PStream<T> {
 
   /** Gives the length of the entire steam. */
   abstract get length(): number;
+  
   /**
    * Gives the element at a given index inside the stream.
    * @param i The index where the element is.
@@ -28,7 +29,7 @@ export default abstract class PStream<T> {
    * If there is no next element (a.k.a. null), it won't increment the internal index.
    */
   next(): T | null {
-    const nextElement = this.elementAt(this._index + 1);
+    const nextElement = this.elementAt(this._index);
     if (nextElement) this._index++;
     return nextElement;
   }
