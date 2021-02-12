@@ -90,4 +90,17 @@ export default class StringPStream extends PStream<number> {
     this._index += charWidth;
     return this.getUtf8Char(index, charWidth);
   }
+
+  /** Gets the next `n` characters in the stream. */
+  nextChars(n: number): string {
+    let s = "";
+    let index: number, charWidth: number;
+    for (let i = 0; i < n; i++) {
+      index = this._index;
+      charWidth = this.getCharWidth(index);
+      s += this.getUtf8Char(index, charWidth);
+      this._index += charWidth;
+    }
+    return s;
+  }
 }
