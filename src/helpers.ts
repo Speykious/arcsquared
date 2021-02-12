@@ -38,3 +38,5 @@ export function charLength(str: string): number {
 export function insp(o: Object): string {
   return inspect(o, false, 4);
 }
+
+export const EOF = "End Of Input";
