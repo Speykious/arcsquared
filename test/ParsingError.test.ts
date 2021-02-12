@@ -1,7 +1,9 @@
+import { EOF } from "../src/helpers";
 import ParsingError from "../src/ParsingError";
+import { bold, green, red } from "ansi-colors-ts";
 
 describe("ParsingError", () => {
-  it("shows me something", () => {
+  it("correctly uses colors", () => {
     const perr = new ParsingError({
       index: 0,
       from: "someParserCombinator",
@@ -9,20 +11,30 @@ describe("ParsingError", () => {
       actual: "42",
       colored: true
     });
-    console.log(perr.toString());
+    
+    expect(perr.toString())
+    .toBe(`${red(
+      `${bold("ParsingError")} 'someParserCombinator' (position 0): `
+    )}Expected ${green("1")}, got ${red("42")}`);
+    
     perr.colored = false;
-    console.log(perr.toString());
+    expect(perr.toString())
+    .toBe(`ParsingError 'someParserCombinator' (position 0): Expected 1, got 42`);
     
     const perr2 = new ParsingError({
       index: 69,
       from: "someOtherParserCombinator",
-      message: "Unexpected end of input",
+      message: `Unexpected ${EOF}`,
       colored: true
     });
-    console.log(perr2.toString());
+    
+    expect(perr2.toString())
+    .toBe(`${red(
+      `${bold("ParsingError")} 'someOtherParserCombinator' (position 69): `
+    )}Unexpected ${EOF}`);
+    
     perr2.colored = false;
-    console.log(perr2.toString());
-
-    expect(perr.toString()).not.toBeNull();
+    expect(perr2.toString())
+    .toBe(`ParsingError 'someOtherParserCombinator' (position 69): Unexpected ${EOF}`);
   });
 });
