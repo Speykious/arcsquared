@@ -27,6 +27,7 @@ export default class StringPStream extends PStream<number> {
       this.dataView = new DataView(target.buffer);
   }
 
+  /** Length of the dataview. */
   get length(): number {
     return this.dataView.byteLength;
   }
@@ -79,5 +80,13 @@ export default class StringPStream extends PStream<number> {
    */
   getChar(index: number): string {
     return this.getUtf8Char(index, this.getCharWidth(index));
+  }
+
+  /** Gets the next character in the stream. */
+  nextChar(): string {
+    const index = this._index;
+    const charWidth = this.getCharWidth(index);
+    this._index += charWidth;
+    return this.getUtf8Char(index, charWidth);
   }
 }
