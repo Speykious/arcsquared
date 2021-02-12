@@ -4,6 +4,7 @@ import ParsingError from "./ParsingError";
 import ParserState from "./ParserState";
 import Parser from "./Parser";
 
+export * from "./constants";
 export * from "./PStream";
 export * from "./StringPStream";
 export * from "./ParsingError";

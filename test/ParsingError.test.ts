@@ -1,5 +1,4 @@
-import { EOF } from "../src/helpers";
-import ParsingError from "../src/ParsingError";
+import { EOF, ParsingError } from "../src/index";
 import { bold, green, red } from "ansi-colors-ts";
 
 describe("ParsingError", () => {

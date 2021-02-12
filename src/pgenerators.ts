@@ -1,4 +1,5 @@
-import { charLength, EOF, insp } from "./helpers";
+import { charLength, insp } from "./helpers";
+import { EOF } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
 import StringPStream from "./StringPStream";
