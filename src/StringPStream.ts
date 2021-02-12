@@ -1,10 +1,11 @@
-import PStream from "./PStream"
-import { TypedArray } from "./helpers"
+import PStream from "./PStream";
+import { TypedArray } from "./helpers";
+import { TextEncoder, TextDecoder } from "util";
 
 /** Used to encode text. */
-export const encoder = new TextEncoder()
+export const encoder = new TextEncoder();
 /** Used to decode text. */
-export const decoder = new TextDecoder()
+export const decoder = new TextDecoder();
 
 /**
  * Special PStream for string streams, which are very common.
