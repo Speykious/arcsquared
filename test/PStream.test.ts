@@ -66,6 +66,12 @@ describe("PStream", () => {
       expect(stream.elementAt(4)).toBeNull();
     });
 
+    const streamClone = stream.clone();
+    it("properly clones itself", () => {
+      expect(streamClone.numbers).toBe(stream.numbers);
+      expect(streamClone.index).toEqual(stream.index);
+    });
+
     it("gives the next element properly", () => {
       const firstElement = stream.next();
       expect(firstElement).toEqual(1);
@@ -102,6 +108,12 @@ describe("PStream", () => {
       expect(stream.elementAt(0)).toEqual(array[0]);
       expect(stream.elementAt(2)).toEqual(array[2]);
       expect(stream.elementAt(4)).toBeNull();
+    });
+
+    const streamClone = stream.clone();
+    it("properly clones itself", () => {
+      expect(streamClone.tokens).toBe(stream.tokens);
+      expect(streamClone.index).toEqual(stream.index);
     });
 
     it("gives the next element properly", () => {
