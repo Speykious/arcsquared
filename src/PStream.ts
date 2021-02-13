@@ -22,7 +22,7 @@ export default abstract class PStream<T> {
   abstract elementAt(i: number): T | null;
   
   /** Safely clones the current `PStream`. */
-  abstract clone(): PStream<T>;
+  abstract clone<U extends PStream<T>>(): U;
 
   /**
    * Gives the next element of the stream.

@@ -3,22 +3,26 @@ import ParsingError from "./ParsingError";
 import PStream from "./PStream";
 
 /** The core of the Parser object. */
-export type ParsingFunction<T, D, R> = (state: ParserState<T, unknown, unknown>) => ParserState<T, D, R>;
+export type ParsingFunction<T extends PStream<any>, D, R> =
+  (state: ParserState<T, unknown, unknown>) => ParserState<T, D, R>;
 
 /** An array of different generic parsers. */
-export type ParserTuple<T, D, R extends any[]> = { [K in keyof R]: Parser<T, D, R[K]> }
+export type ParserTuple<T extends PStream<any>, D, R extends any[]> =
+  { [K in keyof R]: Parser<T, D, R[K]> }
 /** An array of parsers paired with strings. */
-export type PairedParsers<T, D, R> = { [K in keyof R]: [string, Parser<T, D, R[K]>] };
+export type PairedParsers<T extends PStream<any>, D, R> =
+  { [K in keyof R]: [string, Parser<T, D, R[K]>] };
 /** An object of results indexed by string keys. */
 export type PairedResults<R> = { [key: string]: R[keyof R] };
 /** Yielder of parsers, which behaves very similarly to monads in functional programming. */
-export type ParserMonad<T, D, R> = Generator<Parser<T, D, unknown>, R, unknown>;
+export type ParserMonad<T extends PStream<any>, D, R> =
+  Generator<Parser<T, D, unknown>, R, unknown>;
 
 /**
  * The most important class of this library: the parser class, which contains a parser function.
  * You will use it to parse a target input of a certain type T, and then either get back some result R or some parsing error, eventually using additional data. For example, you could store the line number and character index of the thing being parsed.
  */
-export default class Parser<T, D, R> {
+export default class Parser<T extends PStream<any>, D, R> {
   /** The state transformer of the parser. */
   pf: ParsingFunction<T, D, R>;
 
@@ -27,7 +31,7 @@ export default class Parser<T, D, R> {
   }
 
   /** Parses a `PStream` target. */
-  parse(target: PStream<T>): ParserState<T, D, R> {
+  parse(target: T): ParserState<T, D, R> {
     return this.pf(new ParserState({ target }));
   }
 
@@ -37,7 +41,7 @@ export default class Parser<T, D, R> {
    * Otherwise, it will call the success function.
    */
   fork<A, B>(
-    target: PStream<T>,
+    target: T,
     errf: (errorState: ParserState<T, D, null>) => A,
     succf: (successState: ParserState<T, D, R>) => B
   ): A | B {
@@ -167,7 +171,7 @@ export default class Parser<T, D, R> {
   }
   
   /** Creates a parser that returns a value right ahead. */
-  static of<T, X>(x: X): Parser<T, unknown, X> {
+  static of<T extends PStream<any>, X>(x: X): Parser<T, unknown, X> {
     return new Parser(s => s.resultify(x));
   }
 }

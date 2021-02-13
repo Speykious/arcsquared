@@ -2,24 +2,26 @@ import PStream from "./PStream";
 import ParsingError from "./ParsingError";
 
 /** Necessary props to instantiate a new `ParserState`. */
-export interface ParserStateProps<T, D, R> {
-  target: PStream<T>;
+export interface ParserStateProps<T extends PStream<any>, D, R> {
+  target: T;
   data?: D | null;
   error?: ParsingError | null;
   result?: R | null;
 }
 
 /** Type representing a successful parser state. */
-export type SuccessState<T, D, R> = ParserState<T, D, R> & { error: null; result: R; };
+export type SuccessState<T extends PStream<any>, D, R> =
+  ParserState<T, D, R> & { error: null; result: R; };
 /** Type representing an unsuccessful parser state. */
-export type ErrorState<T, D> = ParserState<T, D, null> & { error: ParsingError; };
+export type ErrorState<T extends PStream<any>, D> =
+  ParserState<T, D, null> & { error: ParsingError; };
 
 /**
  * Class representing a parser state.
  * It is composed of a target parser stream, some associated data, an error and some parsed result.
  */
-export default class ParserState<T, D, R> {
-  readonly target: PStream<T>;
+export default class ParserState<T extends PStream<any>, D, R> {
+  readonly target: T;
   readonly data: D | null;
   readonly error: ParsingError | null;
   readonly result: R | null;
