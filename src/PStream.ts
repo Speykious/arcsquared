@@ -21,8 +21,11 @@ export default abstract class PStream<T> {
    */
   abstract elementAt(i: number): T | null;
   
-  /** Safely clones the current `PStream`. */
-  abstract clone<U extends PStream<T>>(): U;
+  /** Safely clones the current `PStream`.
+   * 
+   * Due to TypeScript not supporting type override, the return type is `any`.
+   */
+  abstract clone(): any;
 
   /**
    * Gives the next element of the stream.
