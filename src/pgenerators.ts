@@ -5,7 +5,7 @@ import ParsingError from "./ParsingError";
 import StringPStream from "./StringPStream";
 
 /** Takes a character and returns a parser that matches that character **exactly once**. */
-export const char = (c: string): Parser<number, null, number> => {
+export const char = (c: string): Parser<StringPStream, null, number> => {
   if (!c || charLength(c) !== 1)
     throw new TypeError(`char must be called with a single character, got '${c}'`);
   
@@ -33,7 +33,7 @@ export const char = (c: string): Parser<number, null, number> => {
       expected: `character ${insp(c)}`,
       actual: EOF
     }));
-  }) as Parser<number, null, number>;
+  }) as Parser<StringPStream, null, number>;
 }
 
 /** Matches **exactly one** utf8 character. */
@@ -55,4 +55,4 @@ export const anyChar = new Parser(s => {
     expected: "any character",
     actual: EOF
   }));
-}) as Parser<number, null, number>;
+}) as Parser<StringPStream, null, number>;

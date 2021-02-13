@@ -1,4 +1,5 @@
 import Parser, { PairedParsers, PairedResults, ParserMonad, ParserTuple } from "./Parser";
+import PStream from "./PStream";
 //import ParsingError from "./ParsingError";
 
 /** A parser that will always return what is contained in the *internal state data*, without consuming any input.
@@ -13,13 +14,13 @@ export const getData = new Parser(s =>
  * 
  * If dealing with any complex level of state - such as an object where individual keys will be updated or required, then it can be useful to create utility parsers to assist with updating the *internal state data*.
  */
-export const setData = <T, D, R>(d: D) =>
+export const setData = <T extends PStream<any>, D, R>(d: D) =>
   new Parser(s =>
     s.error ? s : s.dataify(d)
   ) as Parser<T, D, R>;
 
 /** Takes a *provided parser*, and returns a function waiting for some *state data* to be set, and then returns a new parser. That parser, when run, ensures that the *state data* is set as the *internal state data* before the *provided parser* runs. */
-export const withData = <T, D, R>(parser: Parser<T, D, R>) => (d: D) =>
+export const withData = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) => (d: D) =>
   setData<T, D, R>(d).chain(() => parser);
 
 /** Takes a generator function, in which parsers are `yield`ed. `coroutine` allows you to write parsers in a more imperative and sequential way - in much the same way `async/await` allows you to write code with promises in a more sequential way.
@@ -28,7 +29,7 @@ export const withData = <T, D, R>(parser: Parser<T, D, R>) => (d: D) =>
  * 
  * Debugging is also much easier, as breakpoints can be easily added, and values logged to the console after they have been parsed.
  */
-export function coroutine<T, D, R>(g: () => ParserMonad<T, D, R>): Parser<T, D, R> {
+export function coroutine<T extends PStream<any>, D, R>(g: () => ParserMonad<T, D, R>): Parser<T, D, R> {
   return new Parser(s => {
     if (s.error) return s;
     const generator = g();
@@ -54,7 +55,7 @@ export function coroutine<T, D, R>(g: () => ParserMonad<T, D, R>): Parser<T, D, 
 }
 
 /** Takes an array of parsers, and returns a new parser that matches each of them sequentially, collecting up the results into an array. */
-export const sequenceOf = <T, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
+export const sequenceOf = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
   new Parser(s => {
     if (s.error) return s;
     const results = [];
@@ -75,7 +76,7 @@ export const sequenceOf = <T, D, R extends any[]>(parsers: ParserTuple<T, D, R>)
  * 
  * A pair is just an array in the form: `[string, parser]`
  */
-export const namedSequenceOf = <T, D, R extends any[]>(pairedParsers: PairedParsers<T, D, R>) =>
+export const namedSequenceOf = <T extends PStream<any>, D, R extends any[]>(pairedParsers: PairedParsers<T, D, R>) =>
   new Parser(s => {
     if (s.error) return s;
     const results: PairedResults<R> = {};
