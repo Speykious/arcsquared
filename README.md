@@ -1,4 +1,4 @@
-# Arcsquared
+# ![arcsquared-logo](./resources/arcsquared.png) Arcsquared
 
 > A statically typed version of Arcthird with more coherent, organized and helpful code.
 
