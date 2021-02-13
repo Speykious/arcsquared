@@ -15,6 +15,12 @@ export default class StringPStream extends PStream<number> {
   /** Dataview, as it is a more convenient way to take a string as a stream. */
   readonly dataView: DataView;
 
+  /**
+   * Constructor of the StringPStream class.
+   * @param target The data that represents a string.
+   * 
+   * Note: if the target is a `DataView`, it will be passed directly by reference to the internal `dataView`.
+   */
   constructor(target: string | DataView | ArrayBuffer | TypedArray) {
     super();
     
@@ -41,6 +47,11 @@ export default class StringPStream extends PStream<number> {
     }
   }
 
+  /**
+   * Safely clones the current `StringPStream`.
+   * 
+   * Note: the internal `dataView` is passed by reference for performance reasons, as it is meant to be immutable anyways.
+   */
   clone(): StringPStream {
     const stream = new StringPStream(this.dataView);
     stream._index = this._index;
