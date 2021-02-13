@@ -2,7 +2,7 @@ import { UEOF, ParsingError } from "../src/index";
 import { bold, green, red } from "ansi-colors-ts";
 
 describe("ParsingError", () => {
-  it("correctly displays", () => {
+  it("correctly displays expected-actual messages", () => {
     const perr = new ParsingError({
       index: 0,
       from: "someParserCombinator",
@@ -21,7 +21,9 @@ describe("ParsingError", () => {
     expect(perr.toString()).toBe(
       `ParsingError 'someParserCombinator' (position 0): Expected 1, got 42`
     );
-
+  });
+  
+  it("correctly displays single messages", () => {
     const perr2 = new ParsingError({
       index: 69,
       from: "someOtherParserCombinator",
