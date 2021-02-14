@@ -143,7 +143,10 @@ export const coroutine = <T extends PStream<any>, D, R>(g: () => ParserMonad<T, 
     }
   }) as Parser<T, D, R>;
 
-/** Takes a positive number and returns a function. That function takes a parser and returns a new parser which matches the given parser **exactly** the specified number of times. */
+/** Takes a positive number and returns a function. That function takes a parser and returns a new parser which matches the given parser **exactly** the specified number of times.
+ * 
+ * If that number is set to 0, then it will literally do nothing; however, the error will still be mapped.
+ */
 export const exactly = (n: number) => {
   if (n < 0)
     throw new TypeError(`[exactly] expected a positive number, got ${n}.`);
@@ -157,8 +160,14 @@ export const exactly = (n: number) => {
         if (s.error) return s;
         results.push(s.result as R);
       }
-      return s.resultify(results);
-    }) as Parser<T, D, R[]>)
+      const data = s.data as D ?? {};
+      return new ParserState({
+        ...s.props,
+        error: null,
+        result: results,
+        data: { ...data, exactlyTimes: i }
+      });
+    }) as Parser<T, D & { exactlyTimes: number }, R[]>)
     .errorMap(error =>
       new ParsingError({
         ...error.props,
@@ -166,6 +175,48 @@ export const exactly = (n: number) => {
       })
     );
 };
+
+/** Takes a parser and returns a new parser which matches it **zero or more** times. Because it will match zero or more values, this parser will always match, resulting in an empty array in the zero case. */
+export const many = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
+  new Parser(s => {
+    if (s.error) return s;
+    const results: R[] = [];
+    while (true) {
+      s = parser.pf(s);
+      const { length, index } = s.target;
+      if (s.error) break;
+      results.push(s.result as R);
+      if (length && index >= length) break;
+    }
+    const data = s.data as D ?? {};
+      return new ParserState({
+        ...s.props,
+        error: null,
+        result: results,
+        data: { ...data, manyTimes: results.length }
+      });
+  }) as Parser<T, D & { manyTimes: number }, R[]>;
+
+/**
+ * Very similarly to the `many` combinator, it first takes a number `n` and returns a function.
+ * That function takes a parser and returns a new parser which matches it **`n` or more** times.
+ */
+export const atLeast = (n: number) => <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
+  new Parser(s => {
+    if (s.error) return s;
+    const state = many(parser).pf(s);
+    const times = state.data?.manyTimes ?? 0;
+    return times >= n
+      ? s
+      : s.errorify(new ParsingError({
+          from: `atLeast ${n}`,
+          expected: `to match at least ${n} value${times === 1 ? "" : "s"}`,
+          actual: `${times}`
+        }));
+  }) as Parser<T, D, R[]>;
+
+/** Takes a parser and returns a new parser which matches it **one or more** times. */
+export const atLeast1 = atLeast(1);
 
 /** Takes an array of parsers, and returns a new parser that matches each of them sequentially, collecting up the results into an array. */
 export const sequence = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
