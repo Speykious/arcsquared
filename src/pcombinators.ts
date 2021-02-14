@@ -84,19 +84,15 @@ export const strparse = <D, R>(parser: Parser<StringPStream, D, R>) =>
 
 /** Takes a function that receives the last matched value and returns a new parser. It's important that the function **always** returns a parser. If a valid one cannot be selected, you can always use `fail`. */
 export const decide = <T extends PStream<any>, D, R, S>(f: (result: R) => Parser<T, D, S>) =>
-  new Parser(s => {
-    return s.error
-      ? s
-      : f(s.result as R).pf(s);
-  }) as Parser<T, D, S>;
+  new Parser(s =>
+    s.error ? s : f(s.result as R).pf(s)
+  ) as Parser<T, D, S>;
 
 /** Takes a parsing error and returns a parser that always fails with the provided parsing error. */
 export const fail = <T extends PStream<any>, D, R>(error: ParsingError) =>
-  new Parser(s => {
-    return s.error
-      ? s
-      : s.errorify(error);
-  }) as Parser<T, D, R>;
+  new Parser(s =>
+    s.error ? s : s.errorify(error)
+  ) as Parser<T, D, R>;
 
 /**
  * Takes a value and returns a parser that always matches that value without consuming any input.
@@ -217,6 +213,18 @@ export const atLeast = (n: number) => <T extends PStream<any>, D, R>(parser: Par
 
 /** Takes a parser and returns a new parser which matches it **one or more** times. */
 export const atLeast1 = atLeast(1);
+
+/** Takes a function and returns a parser does not consume input, but instead runs the provided function on the last matched value, and set that as the new last matched value. This function can be used to apply structure or transform the values as they are being parsed. */
+export const mapTo = <T extends PStream<any>, D, R, S>(f: (result: R) => S) =>
+  new Parser(s =>
+    s.error ? s : s.resultify(f(s.result as R))
+  ) as Parser<T, D, S>;
+
+/** Like `mapTo` but it transforms the error value. */
+export const errorMapTo = <T extends PStream<any>, D, R>(f: (error: ParsingError) => ParsingError) =>
+  new Parser(s =>
+    s.error ? s.errorify(f(s.error)) : s
+  ) as Parser<T, D, R>;
 
 /** Takes an array of parsers, and returns a new parser that matches each of them sequentially, collecting up the results into an array. */
 export const sequence = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
