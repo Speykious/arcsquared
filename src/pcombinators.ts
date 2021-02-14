@@ -1,6 +1,9 @@
+import PStream from "./PStream";
+import StringPStream from "./StringPStream";
+import { TypedArray } from "./helpers";
 import Parser, { PairedParsers, PairedResults, ParserMonad, ParserTuple } from "./Parser";
 import ParserState from "./ParserState";
-import PStream from "./PStream";
+import ParsingError from "./ParsingError";
 //import ParsingError from "./ParsingError";
 
 /** A parser that will always return what is contained in the *internal state data*, without consuming any input.
@@ -51,9 +54,60 @@ export const pipeResult = <K extends PStream<any>, T extends K[], D, R>(
     return s;
   }) as Parser<T[0], D, R>;
 
+/** Takes a function and returns a parser that does nothing and consumes no input, but runs the provided function on the last parsed value. This is intended as a debugging tool to see the state of parsing at any point in a sequential operation like `sequence` or `pipe`. */
+export const tap = <T extends PStream<any>, D, R>(f: (state: ParserState<T, D, R>) => void) =>
+  new Parser(s => {
+    f(s as ParserState<T, D, R>);
+    return s;
+  }) as Parser<T, D, R>;
+
+/** Functional wrapper around the `.parse()` method of `Parser`.
+ * 
+ * Takes a parser, and returns a function that takes some `PStream` input to parse it using that parser.
+ * @returns the parser state resulting from that parsing.
+ */
+export const parse = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) => (input: T) =>
+  parser.parse(input);
+
+/**
+ * Does the same thing as the `parse` functional wrapper, but more specifically for `StringPStream` by taking a string, dataview, array buffer, or typed array as an input.
+ * 
+ * In fact, it would have been quite annoying, having to write
+ * ```ts
+ * myParser.parse(new StringPStream("some random string here"))
+ * ```
+ * everytime for simple things like that.
+ */
+export const strparse = <D, R>(parser: Parser<StringPStream, D, R>) =>
+  (input: string | DataView | ArrayBuffer | TypedArray) =>
+  parser.parse(new StringPStream(input));
+
+/** Takes a function that receives the last matched value and returns a new parser. It's important that the function **always** returns a parser. If a valid one cannot be selected, you can always use `fail`. */
+export const decide = <T extends PStream<any>, D, R, S>(f: (result: R) => Parser<T, D, S>) =>
+  new Parser(s => {
+    return s.error
+      ? s
+      : f(s.result as R).pf(s);
+  }) as Parser<T, D, S>;
+
+/** Takes a parsing error and returns a parser that always fails with the provided parsing error. */
+export const fail = <T extends PStream<any>, D, R>(error: ParsingError) =>
+  new Parser(s => {
+    return s.error
+      ? s
+      : s.errorify(error);
+  }) as Parser<T, D, R>;
+
+/**
+ * Takes a value and returns a parser that always matches that value without consuming any input.
+ * 
+ * Essentially, the same thing as `Parser.of`, as you can observe if you go to the definition.
+ */
+export const succeedWith = Parser.of;
+
 /** Takes a generator function, in which parsers are `yield`ed. `coroutine` allows you to write parsers in a more imperative and sequential way ─ in much the same way `async/await` allows you to write code with promises in a more sequential way.
  * 
- * Inside of the generator function, you can use all regular JavaScript language features, like loops, variable assignments, and conditional statements. This makes it easy to write very powerful parsers using `coroutine`, but on the other side it can lead to less readable, more complex code.
+ * Inside of the generator function, you can use all regular Javascript and Typescript language features, like loops, variable assignments, and conditional statements. This makes it easy to write very powerful parsers using `coroutine`, but on the other side it can lead to less readable, more complex code.
  * 
  * Debugging is also much easier, as breakpoints can be easily added, and values logged to the console after they have been parsed.
  */
