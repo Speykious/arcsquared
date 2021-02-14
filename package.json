@@ -23,7 +23,8 @@
     "semi": true,
     "singleQuote": false,
     "trailingComma": "none",
-    "proseWrap": "never"
+    "proseWrap": "never",
+    "tabWidth": 2
   },
   "name": "arcsquared",
   "description": "Rewriting Arcthird in Typescript, which is the rewriting of Arcsecond in Coffeescript.",
