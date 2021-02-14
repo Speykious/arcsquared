@@ -114,25 +114,25 @@ export default class Parser<T extends PStream<any>, D, R> {
   }
 
   /** Maps the error of the parser. */
-  errorMap(f: (errorState: ParserState<T, D, null>) => ParsingError): Parser<T, D, R> {
+  errorMap(f: (error: ParsingError) => ParsingError): Parser<T, D, R> {
     const pf = this.pf;
     return new Parser(s => {
       if (s.error) return s;
       const state = pf(s);
       return state.error
-        ? state.errorify(f(state as unknown as ParserState<T, D, null>))
+        ? state.errorify(f(state.error))
         : state;
     }) as Parser<T, D, R>;
   }
   
   /** Chooses the next parser based on the parsed error. */
-  errorChain(f: (errorState: ParserState<T, D, null>) => Parser<T, D, R>): Parser<T, D, R> {
+  errorChain(f: (error: ParsingError) => Parser<T, D, R>): Parser<T, D, R> {
     const pf = this.pf;
     return new Parser(s => {
       if (s.error) return s;
       const state = pf(s);
       return state.error
-        ? f(state as unknown as ParserState<T, D, null>).pf(state)
+        ? f(state.error).pf(state)
         : state;
     }) as Parser<T, D, R>;
   }
