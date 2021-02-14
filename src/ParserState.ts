@@ -61,8 +61,12 @@ export default class ParserState<T extends PStream<any>, D, R> {
     }) as SuccessState<T, D, S>;
   }
   
-  /** Returns a new `ParserState` based on the current one while changing the error property. */
+  /**
+   * Returns a new `ParserState` based on the current one while changing the error property.
+   * If the `index` property of the parsing error is set to `null` or `undefined`, it will overwrite it with this parser state's index value.
+   */
   errorify(error: ParsingError): ErrorState<T, D> {
+    error.index = error.index ?? this.index;
     return new ParserState({
       ...this.props,
       error,

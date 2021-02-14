@@ -4,7 +4,7 @@ import { red, green, bold } from "ansi-colors-ts";
 /** Necessary props to instantiate a new `ParsingError`. */
 export interface ParsingErrorProps {
   from?: string | null;
-  index: number;
+  index?: number | null;
   expected?: string | null;
   actual?: string | null;
   message?: string | null;
@@ -26,8 +26,11 @@ export default class ParsingError {
 
   /** The origin of the error, like the parser combinator that produced it. */
   readonly from: string | null;
-  /** The index in the parsing stream where the error has been found. */
-  readonly index: number;
+  /**
+   * The index in the parsing stream where the error has been found.
+   * If it is set to `null` or `undefined`, then it will be overwritten by the parser state being errorified using this object.
+   */
+  index: number | null;
   /** The value that was expected. Optional as there could be no particular expectations. */
   readonly expected: string | null;
   /** The actual value received. */
@@ -39,7 +42,7 @@ export default class ParsingError {
   
   constructor(props: ParsingErrorProps) {
     this.from = props.from ?? null;
-    this.index = props.index;
+    this.index = props.index ?? null;
     this.expected = props.expected ?? null;
     this.actual = props.actual ?? null;
     this.message = props.message ?? null;
