@@ -1,4 +1,5 @@
 import Parser, { PairedParsers, PairedResults, ParserMonad, ParserTuple } from "./Parser";
+import ParserState from "./ParserState";
 import PStream from "./PStream";
 //import ParsingError from "./ParsingError";
 
@@ -23,7 +24,34 @@ export const setData = <T extends PStream<any>, D, R>(d: D) =>
 export const withData = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) => (d: D) =>
   setData<T, D, R>(d).chain(() => parser);
 
-/** Takes a generator function, in which parsers are `yield`ed. `coroutine` allows you to write parsers in a more imperative and sequential way - in much the same way `async/await` allows you to write code with promises in a more sequential way.
+/** Takes an array of parsers and composes them left to right, so each parser's return value is passed into the next one in the chain. The result is a new parser that, when run, yields the result of the final parser in the chain.
+ */
+export const pipe = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
+  new Parser(s => {
+    for (const parser of parsers)
+      s = parser.pf(s as ParserState<T, unknown, unknown>);
+    return s;
+  }) as Parser<T, D, R[typeof parsers.length]>;
+
+/** Takes an array of parsers and composes them right to left, so each parsers return value is passed into the next one in the chain. The result is a new parser that, when run, yields the result of the final parser in the chain.
+ */
+export const compose = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
+  pipe([...parsers].reverse() as ParserTuple<T, D, R>) as Parser<T, D, R[0]>;
+
+/** Takes an array of parsers, and pipes the **result** of the previous one as the **target** of the next one. As a consequence, every parser except the last one has to have a return type extending the `PStream` class. */
+export const pipeResult = <K extends PStream<any>, T extends K[], D, R>(
+  parsers: ParserTuple<T[number], D, (T[number] | R)[]>
+) =>
+  new Parser(s => {
+    if (s.error) return s;
+    for (const parser of parsers) {
+      if (s.error) break;
+      s = parser.parse(s.result as T[number]);
+    }
+    return s;
+  }) as Parser<T[0], D, R>;
+
+/** Takes a generator function, in which parsers are `yield`ed. `coroutine` allows you to write parsers in a more imperative and sequential way ─ in much the same way `async/await` allows you to write code with promises in a more sequential way.
  * 
  * Inside of the generator function, you can use all regular JavaScript language features, like loops, variable assignments, and conditional statements. This makes it easy to write very powerful parsers using `coroutine`, but on the other side it can lead to less readable, more complex code.
  * 
