@@ -7,11 +7,11 @@ import StringPStream from "./StringPStream";
 /** Takes a character and returns a parser that matches that character **exactly once**. */
 export const char = (c: string): Parser<StringPStream, null, number> => {
   if (!c || charLength(c) !== 1)
-    throw new TypeError(`char must be called with a single character, got '${c}'`);
+    throw new TypeError(`[char] must be called with a single character, got '${c}'`);
   
   return new Parser(s => {
     if (!(s.target instanceof StringPStream))
-      throw new TypeError(`char expects a StringPStream instance as target, got '${typeof s.target}'`);
+      throw new TypeError(`[char] expected a StringPStream instance as target, got '${typeof s.target}'`);
     if (s.error) return s;
     const { index, target } = s;
     const targetLength = target.length;
