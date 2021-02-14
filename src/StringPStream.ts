@@ -94,6 +94,11 @@ export default class StringPStream extends PStream<number> {
     return this.getUtf8Char(index, this.getCharWidth(index));
   }
 
+  /** Gets the next character with the correct size, *without updating the index*. */
+  peekChar(): string {
+    return this.getChar(this._index);
+  }
+
   /** Gets the next character in the stream. */
   nextChar(): string {
     const index = this._index;
