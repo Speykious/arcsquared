@@ -18,9 +18,9 @@ export const char = (c: string): Parser<StringPStream, null, number> => {
     if (index < targetLength) {
       const charWidth = target.getCharWidth(index);
       if (index + charWidth <= targetLength) {
-        const char = target.nextChar();
+        const char = target.peekChar();
         return char === c
-          ? s.resultify(c)
+          ? s.resultify(target.nextChar())
           : s.errorify(new ParsingError({
               index,
               expected: `character ${insp(c)}`,
@@ -45,10 +45,8 @@ export const anyChar = new Parser(s => {
   const targetLength = target.length;
   if (index < targetLength) {
     const charWidth = target.getCharWidth(index)
-    if (index + charWidth <= targetLength) {
-      const char = target.nextChar();
-      return s.resultify(char);
-    }
+    if (index + charWidth <= targetLength)
+      return s.resultify(target.nextChar());
   }
   return s.errorify(new ParsingError({
     index,
