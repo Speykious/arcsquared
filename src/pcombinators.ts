@@ -105,14 +105,22 @@ export const fail = <T extends PStream<any>, D, R>(error: ParsingError) =>
  */
 export const succeedWith = Parser.of;
 
+/** Takes a parser and returns a version of that parser that will always succeed, but the captured value will either be a success or a failure. */
+export const either = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
+  new Parser(s => {
+    if (s.error) return s;
+    const state = parser.pf(s);
+    return state.resultify(state.result ?? state.error);
+  }) as Parser<T, D, R>;
+
 /** Takes a generator function, in which parsers are `yield`ed. `coroutine` allows you to write parsers in a more imperative and sequential way ─ in much the same way `async/await` allows you to write code with promises in a more sequential way.
  * 
  * Inside of the generator function, you can use all regular Javascript and Typescript language features, like loops, variable assignments, and conditional statements. This makes it easy to write very powerful parsers using `coroutine`, but on the other side it can lead to less readable, more complex code.
  * 
  * Debugging is also much easier, as breakpoints can be easily added, and values logged to the console after they have been parsed.
  */
-export function coroutine<T extends PStream<any>, D, R>(g: () => ParserMonad<T, D, R>): Parser<T, D, R> {
-  return new Parser(s => {
+export const coroutine = <T extends PStream<any>, D, R>(g: () => ParserMonad<T, D, R>) =>
+  new Parser(s => {
     if (s.error) return s;
     const generator = g();
     
@@ -134,7 +142,30 @@ export function coroutine<T extends PStream<any>, D, R>(g: () => ParserMonad<T, 
       nextValue = nextState.result;
     }
   }) as Parser<T, D, R>;
-}
+
+/** Takes a positive number and returns a function. That function takes a parser and returns a new parser which matches the given parser **exactly** the specified number of times. */
+export const exactly = (n: number) => {
+  if (n < 0)
+    throw new TypeError(`[exactly] expected a positive number, got ${n}.`);
+  return <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
+    (new Parser(s => {
+      if (s.error) return s;
+      const results: R[] = [];
+      let i = 0;
+      for (; i < n; i++) {
+        s = parser.pf(s);
+        if (s.error) return s;
+        results.push(s.result as R);
+      }
+      return s.resultify(results);
+    }) as Parser<T, D, R[]>)
+    .errorMap(error =>
+      new ParsingError({
+        ...error.props,
+        from: `exactly ${n}${error.from ? ` (${error.from})` : ""}`
+      })
+    );
+};
 
 /** Takes an array of parsers, and returns a new parser that matches each of them sequentially, collecting up the results into an array. */
 export const sequence = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
