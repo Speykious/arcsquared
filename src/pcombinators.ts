@@ -137,7 +137,7 @@ export function coroutine<T extends PStream<any>, D, R>(g: () => ParserMonad<T, 
 }
 
 /** Takes an array of parsers, and returns a new parser that matches each of them sequentially, collecting up the results into an array. */
-export const sequenceOf = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
+export const sequence = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
   new Parser(s => {
     if (s.error) return s;
     const results = [];
@@ -158,7 +158,7 @@ export const sequenceOf = <T extends PStream<any>, D, R extends any[]>(parsers: 
  * 
  * A pair is just an array in the form: `[string, parser]`
  */
-export const namedSequenceOf = <T extends PStream<any>, D, R extends any[]>(pairedParsers: PairedParsers<T, D, R>) =>
+export const namedSequence = <T extends PStream<any>, D, R extends any[]>(pairedParsers: PairedParsers<T, D, R>) =>
   new Parser(s => {
     if (s.error) return s;
     const results: PairedResults<R> = {};
