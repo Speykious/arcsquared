@@ -1,4 +1,4 @@
-import { StringPStream, encoder } from "../src/index";
+import { StringPStream, encoder, $nextOf, $nextsOf } from "../src/index";
 
 describe("StringPStream", () => {
   const s = new Uint8Array(encoder.encode("Surprise, motherfucker 😎").buffer);
@@ -15,13 +15,13 @@ describe("StringPStream", () => {
   });
 
   it("gives the next element properly", () => {
-    const firstElement = stream.next();
+    const firstElement = $nextOf(stream);
     expect(firstElement).toEqual(s[0]);
     expect(stream.index).toEqual(1);
   });
 
   it("gives next elements properly", () => {
-    const elements = stream.nexts(20);
+    const elements = $nextsOf(stream, 20);
     expect(elements).toEqual(Array.from(s.slice(1, 21)));
     expect(stream.index).toEqual(21);
   });
@@ -39,7 +39,7 @@ describe("StringPStream", () => {
   });
   
   it("gives nothing when no elements are left", () => {
-    const nothing = stream.next();
+    const nothing = $nextOf(stream);
     expect(nothing).toBeNull();
     expect(stream.index).toEqual(27);
   });

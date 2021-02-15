@@ -1,10 +1,11 @@
-import { PStream } from "../src/index";
+import { $nextOf, $nextsOf, PStream } from "../src/index";
 
-class IntPStream extends PStream<number> {
+class IntPStream implements PStream<number> {
+  index: number;
   readonly numbers: number[];
 
   constructor(numbers: number[]) {
-    super();
+    this.index = 0;
     this.numbers = numbers;
   }
 
@@ -18,7 +19,7 @@ class IntPStream extends PStream<number> {
 
   clone(): IntPStream {
     const stream = new IntPStream(this.numbers);
-    stream._index = this._index;
+    stream.index = this.index;
     return stream;
   }
 }
@@ -28,11 +29,12 @@ interface Token {
   value: string;
 }
 
-class TokenPStream extends PStream<Token> {
+class TokenPStream implements PStream<Token> {
+  index: number;
   readonly tokens: Token[];
 
   constructor(numbers: Token[]) {
-    super();
+    this.index = 0;
     this.tokens = numbers;
   }
 
@@ -46,7 +48,7 @@ class TokenPStream extends PStream<Token> {
 
   clone(): TokenPStream {
     const stream = new TokenPStream(this.tokens);
-    stream._index = this._index;
+    stream.index = this.index;
     return stream;
   }
 }
@@ -73,19 +75,19 @@ describe("PStream", () => {
     });
 
     it("gives the next element properly", () => {
-      const firstElement = stream.next();
+      const firstElement = $nextOf(stream);
       expect(firstElement).toEqual(1);
       expect(stream.index).toEqual(1);
     });
 
     it("gives next elements properly", () => {
-      const elements = stream.nexts(5);
+      const elements = $nextsOf(stream, 5);
       expect(elements).toEqual([2, 3, 4]);
       expect(stream.index).toEqual(4);
     });
 
     it("gives nothing when no elements are left", () => {
-      const nothing = stream.next();
+      const nothing = $nextOf(stream);
       expect(nothing).toBeNull();
       expect(stream.index).toEqual(4);
     });
@@ -117,19 +119,19 @@ describe("PStream", () => {
     });
 
     it("gives the next element properly", () => {
-      const firstElement = stream.next();
+      const firstElement = $nextOf(stream);
       expect(firstElement).toEqual(array[0]);
       expect(stream.index).toEqual(1);
     });
 
     it("gives next elements properly", () => {
-      const elements = stream.nexts(5);
+      const elements = $nextsOf(stream, 5);
       expect(elements).toEqual(array.slice(1, 4));
       expect(stream.index).toEqual(4);
     });
     
     it("gives nothing when no elements are left", () => {
-      const nothing = stream.next();
+      const nothing = $nextOf(stream);
       expect(nothing).toBeNull();
       expect(stream.index).toEqual(4);
     });
