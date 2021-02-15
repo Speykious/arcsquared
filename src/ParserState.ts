@@ -45,7 +45,7 @@ export default class ParserState<T extends PStream<any>, D, R> {
    */
   get props(): ParserStateProps<T, D, R> {
     return {
-      target: this.target.clone(),
+      target: this.target.clone() as T,
       data: this.data,
       error: this.error,
       result: this.result

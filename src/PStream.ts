@@ -1,54 +1,56 @@
-/** Abstract class representing the input stream of every parser you're gonna create. */
-export default abstract class PStream<T> {
-  /** Protected index that keeps track of the current element of the stream. */
-  protected _index: number;
-
-  constructor() {
-    this._index = 0;
-  }
-
-  /** Index that keeps track of the current element of the stream. */
-  get index(): number {
-    return this._index;
-  }
-
-  /** Gives the length of the entire steam. */
-  abstract get length(): number;
-  
+/**
+ * Interface representing a parser stream.
+ * Every input you parse has to implement that.
+ */
+export default interface PStream<T> {
+  /** Keeps track of the current element of the stream. */
+  index: number;
+  /** Length of the entire stream. */
+  length: number;
   /**
    * Gives the element at a given index inside the stream.
    * @param i The index where the element is.
    */
-  abstract elementAt(i: number): T | null;
-  
-  /** Safely clones the current `PStream`.
-   * 
-   * Due to TypeScript not supporting type override, the return type is `any`.
-   */
-  abstract clone(): any;
+  elementAt: (i: number) => T | null;
+  /** Safely clones the PStream. */
+  clone: () => PStream<T>;
+};
 
-  /**
-   * Gives the next element of the stream.
-   * If there is no next element (a.k.a. null), it won't increment the internal index.
-   */
-  next(): T | null {
-    const nextElement = this.elementAt(this._index);
-    if (nextElement) this._index++;
-    return nextElement;
-  }
+/** Initialises a `PStream` by setting its index to `0`. */
+export const initStream: { index: number } = { index: 0 };
 
-  /**
-   * Gives the n next elements of the stream.
-   * @param n the number of maximum next elements to get.
-   */
-  nexts(n: number): T[] {
-    const nextElements: T[] = [];
-    let nel: T | null;
-    for (let i = 0; i < n; i++) {
-      nel = this.next();
-      if (!nel) break;
-      nextElements.push(nel);
-    }
-    return nextElements;
+/**
+ * Gives the current element of the stream.
+ * 
+ * If every element has been consumed, it will return `null`.
+ */
+export function $currentOf<T>(stream: PStream<T>): T | null {
+  return stream.elementAt(stream.index);
+}
+
+/**
+ * Gives the next element of the stream.
+ * 
+ * If there is no next element (a.k.a. returns `null`), it won't increment the internal index.
+ */
+export function $nextOf<T>(stream: PStream<T>): T | null {
+  const nel = $currentOf(stream);
+  if (nel) stream.index++;
+  return nel;
+};
+
+/**
+ * Gives the n next elements of the stream.
+ * 
+ * If there is no next element (a.k.a. returns an empty array), it won't increment the internal index.
+ */
+export function $nextsOf<T>(stream: PStream<T>, n: number): T[] {
+  const nextElements: T[] = [];
+  for (let i = 0; i < n; i++) {
+    const nel = $currentOf(stream);
+    if (!nel) break;
+    stream.index++;
+    nextElements.push(nel);
   }
+  return nextElements;
 }

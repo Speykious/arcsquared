@@ -11,7 +11,10 @@ export const decoder = new TextDecoder();
  * Special PStream for string streams, which are very common.
  * The characters are encoded as numbers.
  */
-export default class StringPStream extends PStream<number> {
+export default class StringPStream implements PStream<number> {
+  index: number;
+  /** Length of the dataview. */
+  length: number;
   /** Dataview, as it is a more convenient way to take a string as a stream. */
   readonly dataView: DataView;
 
@@ -22,7 +25,7 @@ export default class StringPStream extends PStream<number> {
    * Note: if the target is a `DataView`, it will be passed directly by reference to the internal `dataView`.
    */
   constructor(target: string | DataView | ArrayBuffer | TypedArray) {
-    super();
+    this.index = 0;
     
     if (typeof target === "string")
       this.dataView = new DataView(encoder.encode(target).buffer);
@@ -32,13 +35,10 @@ export default class StringPStream extends PStream<number> {
       this.dataView = target;
     else
       this.dataView = new DataView(target.buffer);
+    
+    this.length = this.dataView.byteLength;
   }
 
-  /** Length of the dataview. */
-  get length(): number {
-    return this.dataView.byteLength;
-  }
-  
   elementAt(i: number): number | null {
     try {
       return this.dataView.getUint8(i);
@@ -54,7 +54,7 @@ export default class StringPStream extends PStream<number> {
    */
   clone(): StringPStream {
     const stream = new StringPStream(this.dataView);
-    stream._index = this._index;
+    stream.index = this.index;
     return stream;
   }
 
@@ -110,14 +110,14 @@ export default class StringPStream extends PStream<number> {
 
   /** Gets the next character with the correct size, *without updating the index*. */
   peekChar(): string {
-    return this.getChar(this._index);
+    return this.getChar(this.index);
   }
 
   /** Gets the next character in the stream. */
   nextChar(): string {
-    const index = this._index;
+    const index = this.index;
     const charWidth = this.getCharWidth(index);
-    this._index += charWidth;
+    this.index += charWidth;
     return this.getUtf8Char(index, charWidth);
   }
 
@@ -126,10 +126,10 @@ export default class StringPStream extends PStream<number> {
     let s = "";
     let index: number, charWidth: number;
     for (let i = 0; i < n; i++) {
-      index = this._index;
+      index = this.index;
       charWidth = this.getCharWidth(index);
       s += this.getUtf8Char(index, charWidth);
-      this._index += charWidth;
+      this.index += charWidth;
     }
     return s;
   }
