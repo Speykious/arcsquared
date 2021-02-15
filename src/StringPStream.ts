@@ -94,6 +94,20 @@ export default class StringPStream extends PStream<number> {
     return this.getUtf8Char(index, this.getCharWidth(index));
   }
 
+  /**
+   * Gets a string of a certain length from the internal dataview.
+   * @param index The index of the first character in the string.
+   * @param length The number of characters to get.
+   */
+  getString(index: number, length: number): string {
+    const dataView = this.dataView;
+    const bytes = Uint8Array.from(
+      { length },
+      (_, i) => dataView.getUint8(index + i)
+    );
+    return decoder.decode(bytes);
+  }
+
   /** Gets the next character with the correct size, *without updating the index*. */
   peekChar(): string {
     return this.getChar(this._index);
