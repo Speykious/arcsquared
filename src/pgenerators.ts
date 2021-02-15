@@ -22,6 +22,7 @@ export const char = (c: string) => {
         return char === c
           ? s.resultify(target.nextChar())
           : s.errorify(new ParsingError({
+              from: "char",
               index,
               expected: `character '${c}'`,
               actual: `character '${char}'`
@@ -29,6 +30,7 @@ export const char = (c: string) => {
       }
     }
     return s.errorify(new ParsingError({
+      from: "char",
       index,
       expected: `character '${c}'`,
       actual: EOF
@@ -49,6 +51,7 @@ export const anyChar = new Parser(s => {
       return s.resultify(target.nextChar());
   }
   return s.errorify(new ParsingError({
+    from: "anyChar",
     index,
     expected: "any character",
     actual: EOF
@@ -63,6 +66,7 @@ export const peek = new Parser(s => {
   return index < length
     ? s.resultify(target.elementAt(index))
     : s.errorify(new ParsingError({
+        from: "peek",
         index,
         message: UEOF,
       }));
