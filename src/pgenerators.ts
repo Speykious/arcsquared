@@ -1,4 +1,4 @@
-import { charLength, insp } from "./helpers";
+import { charLength } from "./helpers";
 import { EOF } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
@@ -23,14 +23,14 @@ export const char = (c: string): Parser<StringPStream, null, number> => {
           ? s.resultify(target.nextChar())
           : s.errorify(new ParsingError({
               index,
-              expected: `character ${insp(c)}`,
-              actual: `character ${insp(char)}`
+              expected: `character '${c}'`,
+              actual: `character '${char}'`
             }));
       }
     }
     return s.errorify(new ParsingError({
       index,
-      expected: `character ${insp(c)}`,
+      expected: `character '${c}'`,
       actual: EOF
     }));
   }) as Parser<StringPStream, null, number>;
