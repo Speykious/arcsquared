@@ -36,5 +36,5 @@ export function charLength(str: string): number {
 }
 
 export function insp(o: Object): string {
-  return inspect(o, false, 4);
+  return inspect(o, false, 4, true);
 }
