@@ -2,9 +2,8 @@ import PStream from "./PStream";
 import StringPStream from "./StringPStream";
 import { TypedArray } from "./helpers";
 import Parser, { PairedParsers, PairedResults, ParserMonad, ParserTuple } from "./Parser";
-import ParserState from "./ParserState";
+import ParserState, { ErrorState } from "./ParserState";
 import ParsingError from "./ParsingError";
-//import ParsingError from "./ParsingError";
 
 /**
  * A parser that will always return what is contained in the *internal state data*, without consuming any input.
@@ -331,3 +330,25 @@ export const sep1 = <T extends PStream<any>, D, R, S>(separator: Parser<T, D, S>
           expected: "to match at least one separated value"
         }));
   }) as Parser<T, D, R[]>;
+
+/** Takes an array of parsers, and returns a new parser that tries to match each one of them sequentially, and returns the first match. If `choice` fails, then it returns the error message of the parser that matched the most from the string. */
+export const choice = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
+  new Parser(s => {
+    if (s.error) return s;
+    let errorState = null;
+    const originalIndex = s.index;
+    for (const parser of parsers) {
+      const out = parser.pf(s);
+      if (!out.error) return out;
+      s.target.index = originalIndex;
+      if (!errorState || (errorState && out.index > errorState.index))
+        errorState = out;
+    }
+    return errorState as ErrorState<T, D>;
+  }) as Parser<T, D, R[number]>;
+
+/** Takes 3 parsers, a *left* parser, a *right* parser, and a *value* parser, returning a new parser that matches a value matched by the *value* parser, between values matched by the *left* parser and the *right* parser. */
+export const between = <T extends PStream<any>, D, R>(leftp: Parser<T, D, any>) =>
+  (rightp: Parser<T, D, any>) =>
+  (parser: Parser<T, D, R>) =>
+  sequence<T, D, [any, R, any]>([leftp, parser, rightp]).map(([_, x]) => x);
