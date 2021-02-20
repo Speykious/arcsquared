@@ -1,5 +1,5 @@
 import { charLength } from "./helpers";
-import { EOF, UEOF } from "./constants";
+import { EOS, UEOS } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
 import StringPStream, { encoder } from "./StringPStream";
@@ -33,7 +33,7 @@ export const char = (c: string) => {
       from: "char",
       index,
       expected: `character '${c}'`,
-      actual: EOF
+      actual: EOS
     }));
   }) as Parser<StringPStream, null, string>;
 }
@@ -54,7 +54,7 @@ export const anyChar = new Parser(s => {
     from: "anyChar",
     index,
     expected: "any character",
-    actual: EOF
+    actual: EOS
   }));
 }) as Parser<StringPStream, null, string>;
 
@@ -68,7 +68,7 @@ export const peek = new Parser(s => {
     : s.errorify(new ParsingError({
         from: "peek",
         index,
-        message: UEOF,
+        message: UEOS,
       }));
 });
 
@@ -86,7 +86,7 @@ export const str = (cs: string) => {
         from: "str",
         index,
         expected: `"${cs}"`,
-        actual: EOF
+        actual: EOS
       }));
     const sai = target.getString(index, es.byteLength);
     return cs === sai
