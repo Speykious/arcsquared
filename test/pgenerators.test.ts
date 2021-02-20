@@ -1,5 +1,16 @@
-import { char, anyChar, strparse, EOS, peek } from "../src/index";
+import {
+  char,
+  anyChar,
+  strparse,
+  EOS,
+  peek,
+  StringPStream,
+  UEOS
+  //
+} from "../src/index";
+import IntPStream from "./IntPStream.asset";
 
+import TokenPStream from "./TokenPStream.asset";
 
 describe("Parser generators", () => {
   describe("char", () => {
@@ -97,11 +108,66 @@ describe("Parser generators", () => {
   });
 
   describe("peek", () => {
-    
-    it("works when succesful", () => {
-      const state = strparse(peek)("a");
-      console.log(state);
-    })
-
+    it("works with StringPStream", () => {
+      const stream = new StringPStream("abc");
+      const state = peek.parse(stream);
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: null,
+        result: 97
+      });
+    });
+    it("works with TokenPStream", () => {
+      const stream = new TokenPStream([
+        { type: "hours", value: "10" },
+        { type: "minutes", value: "25" }
+      ]);
+      const state = peek.parse(stream);
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: null,
+        result: { type: "hours", value: "10" }
+      });
+    });
+    it("works with IntPStream", () => {
+      const stream = new IntPStream([42, 69]);
+      const state = peek.parse(stream);
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: null,
+        result: 42
+      });
+    });
+    it("works when end of stream", () => {
+      const stream = new StringPStream("");
+      const state = peek.parse(stream);
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: {
+          index: 0,
+          message: UEOS
+        }
+      });
+    });
   });
 });
+//
+/*arserState {
+      target: StringPStream {
+        index: 0,
+        dataView: DataView { byteLength: 1, byteOffset: 0, buffer: [ArrayBuffer] },
+        length: 1
+      },
+      data: null,
+      error: null,
+      result: 97
+    }
+  */
