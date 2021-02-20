@@ -99,3 +99,38 @@ export const str = (cs: string) => {
         }));
   }) as Parser<StringPStream, null, string>;
 };
+
+/**
+ * Takes a regex and returns a parser that matches it **exactly once**.
+ * 
+ * Note: it has to begin with a caret `^`
+ */
+export const regex = (re: RegExp) => {
+  if (!(re instanceof RegExp))
+    throw new TypeError("[regex] must be called with a RegExp");
+  if (re.source[0] !== "^")
+    throw new Error("[regex] must be called with a RegExp starting with '^'");
+  return new Parser(s => {
+    if (s.error) return s;
+    const { target, index } = s;
+    const remaining = target.getString(index, target.length - index);
+    if (remaining.length < 1)
+      return s.errorify(new ParsingError({
+        from: "regex",
+        index,
+        expected: `string matching '${re}'`,
+        actual: EOS
+      }))
+    const match = remaining.match(re);
+    if (match) {
+      const m = match[0];
+      return s.update(m, index + m.length);
+    } else
+      return s.errorify(new ParsingError({
+        from: "regex",
+        index,
+        expected: `string matching '${re}'`,
+        actual: `'${remaining.slice(0, 5)}...'`
+      }));
+  }) as Parser<StringPStream, null, string>;
+}
