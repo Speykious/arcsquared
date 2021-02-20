@@ -1,4 +1,5 @@
-import { char, anyChar, strparse, EOS } from "../src/index";
+import { char, anyChar, strparse, EOS, peek } from "../src/index";
+
 
 describe("Parser generators", () => {
   describe("char", () => {
@@ -93,5 +94,14 @@ describe("Parser generators", () => {
         result: null
       });
     });
+  });
+
+  describe("peek", () => {
+    
+    it("works when succesful", () => {
+      const state = strparse(peek)("a");
+      console.log(state);
+    })
+
   });
 });
