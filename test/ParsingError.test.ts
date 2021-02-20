@@ -1,4 +1,4 @@
-import { UEOF, ParsingError } from "../src/index";
+import { UEOS, ParsingError } from "../src/index";
 import { bold, green, red } from "ansi-colors-ts";
 
 describe("ParsingError", () => {
@@ -27,19 +27,19 @@ describe("ParsingError", () => {
     const perr2 = new ParsingError({
       index: 69,
       from: "someOtherParserCombinator",
-      message: UEOF,
+      message: UEOS,
       colored: true
     });
 
     expect(perr2.toString()).toBe(
       `${red(
         `${bold("ParsingError")} 'someOtherParserCombinator' (position 69): `
-      )}${UEOF}`
+      )}${UEOS}`
     );
 
     perr2.colored = false;
     expect(perr2.toString()).toBe(
-      `ParsingError 'someOtherParserCombinator' (position 69): ${UEOF}`
+      `ParsingError 'someOtherParserCombinator' (position 69): ${UEOS}`
     );
   });
 });

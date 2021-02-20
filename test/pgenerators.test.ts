@@ -1,4 +1,4 @@
-import { char, anyChar, strparse, EOF } from "../src/index";
+import { char, anyChar, strparse, EOS } from "../src/index";
 
 describe("Parser generators", () => {
   describe("char", () => {
@@ -49,7 +49,7 @@ describe("Parser generators", () => {
         error: {
           index: 0,
           expected: "character 'a'",
-          actual: EOF
+          actual: EOS
         },
         result: null
       });
@@ -88,7 +88,7 @@ describe("Parser generators", () => {
         error: {
           index: 0,
           expected: "any character",
-          actual: EOF
+          actual: EOS
         },
         result: null
       });
