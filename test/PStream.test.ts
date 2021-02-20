@@ -1,63 +1,12 @@
-import { $nextOf, $nextsOf, PStream } from "../src/index";
-
-class IntPStream implements PStream<number> {
-  index: number;
-  readonly numbers: number[];
-
-  constructor(numbers: number[]) {
-    this.index = 0;
-    this.numbers = numbers;
-  }
-
-  get length(): number {
-    return this.numbers.length;
-  }
-
-  elementAt(i: number): number {
-    return this.numbers[i] ?? null;
-  }
-
-  clone(): IntPStream {
-    const stream = new IntPStream(this.numbers);
-    stream.index = this.index;
-    return stream;
-  }
-}
-
-interface Token {
-  type: string;
-  value: string;
-}
-
-class TokenPStream implements PStream<Token> {
-  index: number;
-  readonly tokens: Token[];
-
-  constructor(numbers: Token[]) {
-    this.index = 0;
-    this.tokens = numbers;
-  }
-
-  get length(): number {
-    return this.tokens.length;
-  }
-
-  elementAt(i: number): Token | null {
-    return this.tokens[i] ?? null;
-  }
-
-  clone(): TokenPStream {
-    const stream = new TokenPStream(this.tokens);
-    stream.index = this.index;
-    return stream;
-  }
-}
+import { $nextOf, $nextsOf } from "../src/index";
+import IntPStream from "./IntPStream.asset";
+import TokenPStream, { Token } from "./TokenPStream.asset";
 
 describe("PStream", () => {
   describe("IntPStream", () => {
     const array: number[] = [1, 2, 3, 4];
     const stream = new IntPStream(array);
-    
+
     it("has the right length", () => {
       expect(stream.length).toEqual(array.length);
     });
@@ -98,10 +47,9 @@ describe("PStream", () => {
       { type: "string", value: "hello" },
       { type: "string", value: "world" },
       { type: "char", value: "!" },
-      { type: "integer", value: "42" },
+      { type: "integer", value: "42" }
     ];
     const stream = new TokenPStream(array);
-    
     it("has the right length", () => {
       expect(stream.length).toEqual(array.length);
     });
@@ -129,7 +77,7 @@ describe("PStream", () => {
       expect(elements).toEqual(array.slice(1, 4));
       expect(stream.index).toEqual(4);
     });
-    
+
     it("gives nothing when no elements are left", () => {
       const nothing = $nextOf(stream);
       expect(nothing).toBeNull();
