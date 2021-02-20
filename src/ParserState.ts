@@ -52,7 +52,7 @@ export default class ParserState<T extends PStream<any>, D, R> {
     };
   }
 
-  /** Returns a new `ParserState` based on the current one while changing the result property. */
+  /** Returns a new `ParserState` based on the current one while changing the `result` property. */
   resultify<S>(result: S): SuccessState<T, D, S> {
     return new ParserState({
       ...this.props,
@@ -62,7 +62,7 @@ export default class ParserState<T extends PStream<any>, D, R> {
   }
   
   /**
-   * Returns a new `ParserState` based on the current one while changing the error property.
+   * Returns a new `ParserState` based on the current one while changing the `error` property.
    * If the `index` property of the parsing error is set to `null` or `undefined`, it will overwrite it with this parser state's index value.
    */
   errorify(error: ParsingError): ErrorState<T, D> {
@@ -74,11 +74,22 @@ export default class ParserState<T extends PStream<any>, D, R> {
     }) as ErrorState<T, D>;
   }
   
-  /** Returns a new `ParserState` based on the current one while changing the data property. */
+  /** Returns a new `ParserState` based on the current one while changing the `data` property. */
   dataify<E>(data: E): ParserState<T, E, R> {
     return new ParserState({
       ...this.props,
       data
     });
+  }
+
+  /** Returns a new `ParserState` based on the current one while changing both the `result` and `target.index` property. */
+  update<R>(result: R, index: number): SuccessState<T, D, R> {
+    const props = this.props;
+    props.target.index = index;
+    return new ParserState({
+      ...props,
+      error: null,
+      result,
+    }) as SuccessState<T, D, R>;
   }
 }
