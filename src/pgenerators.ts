@@ -1,4 +1,4 @@
-import { charLength } from "./helpers";
+import { charLength, reDigit, reDigits } from "./helpers";
 import { EOS, UEOS } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
@@ -134,3 +134,18 @@ export const regex = (re: RegExp) => {
       }));
   }) as Parser<StringPStream, null, string>;
 }
+
+export const digit = regex(reDigit).errorMap(error =>
+  new ParsingError({
+    ...error.props,
+    from: "digit",
+    expected: "a digit"
+  }));
+
+export const digits = regex(reDigits).errorMap(error =>
+  new ParsingError({
+    ...error.props,
+    from: "digits",
+    expected: "digits"
+  }));
+
