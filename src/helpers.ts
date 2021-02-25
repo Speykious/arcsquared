@@ -16,9 +16,9 @@ export const optionalTransform =
     condition ? f(arg) : arg;
 
 // Caching compiled regexs for better performance
-export const reDigit = /[0-9]/;
+export const reDigit = /^[0-9]/;
 export const reDigits = /^[0-9]+/;
-export const reLetter = /[a-zA-Z]/;
+export const reLetter = /^[a-zA-Z]/;
 export const reLetters = /^[a-zA-Z]+/;
 export const reWhitespaces = /^\s+/;
 
