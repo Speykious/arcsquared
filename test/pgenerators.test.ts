@@ -119,6 +119,7 @@ describe("Parser generators", () => {
         result: 97
       });
     });
+
     it("works with TokenPStream", () => {
       const stream = new TokenPStream([
         { type: "hours", value: "10" },
@@ -133,6 +134,7 @@ describe("Parser generators", () => {
         result: { type: "hours", value: "10" }
       });
     });
+
     it("works with IntPStream", () => {
       const stream = new IntPStream([42, 69]);
       const state = peek.parse(stream);
@@ -144,6 +146,7 @@ describe("Parser generators", () => {
         result: 42
       });
     });
+    
     it("works when end of stream", () => {
       const stream = new StringPStream("");
       const state = peek.parse(stream);
