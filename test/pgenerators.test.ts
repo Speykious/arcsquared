@@ -162,15 +162,3 @@ describe("Parser generators", () => {
     });
   });
 });
-//
-/*arserState {
-      target: StringPStream {
-        index: 0,
-        dataView: DataView { byteLength: 1, byteOffset: 0, buffer: [ArrayBuffer] },
-        length: 1
-      },
-      data: null,
-      error: null,
-      result: 97
-    }
-  */
