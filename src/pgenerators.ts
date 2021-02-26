@@ -90,8 +90,9 @@ export const str = (cs: string) => {
         actual: EOS
       }));
     const sai = target.getString(index, es.byteLength);
+    console.log("string got:", sai);
     return cs === sai
-      ? s.resultify(target.nextChars(es.byteLength))
+      ? s.resultify(target.nextString(es.byteLength))
       : s.errorify(new ParsingError({
           from: "str",
           index,

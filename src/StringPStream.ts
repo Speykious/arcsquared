@@ -108,6 +108,23 @@ export default class StringPStream implements PStream<number> {
     return decoder.decode(bytes);
   }
 
+  /**
+   * Gets the next characters in a string using a bytelength from the internal dataview.
+   * @param byteLength The number of bytes to get.
+   */
+  nextString(byteLength: number): string {
+    const dataView = this.dataView;
+    const index = this.index;
+    const bytes = Uint8Array.from(
+      { length: byteLength },
+      (_, i) => {
+        this.index = index + i;
+        return dataView.getUint8(this.index);
+      }
+    );
+    return decoder.decode(bytes);
+  }
+
   /** Gets the next character with the correct size, *without updating the index*. */
   peekChar(): string {
     return this.getChar(this.index);
