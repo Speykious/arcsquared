@@ -5,7 +5,10 @@ import {
   EOS,
   peek,
   StringPStream,
-  UEOS
+  UEOS,
+  str,
+  digit,
+  digits
   //
 } from "../src/index";
 import IntPStream from "./IntPStream.asset";
@@ -146,7 +149,7 @@ describe("Parser generators", () => {
         result: 42
       });
     });
-    
+
     it("works when end of stream", () => {
       const stream = new StringPStream("");
       const state = peek.parse(stream);
@@ -161,4 +164,148 @@ describe("Parser generators", () => {
       });
     });
   });
+
+  describe("str", () => {
+    it("works when successful", () => {
+      const parser = str("yes");
+      const state = strparse(parser)("yes'nt");
+      expect(state).toMatchObject({
+        error:null,
+        result:"yes"
+      });
+    });
+
+
+    it("works when unsuccessful", () => {
+      const parser = str("yes");
+      const state = strparse(parser)("haha yes'nt");
+      expect(state).toMatchObject({
+        error:{
+          from:"str",
+          index:0,
+          expected:'"yes"',
+          actual:'"hah..."',
+        },
+        result: null
+      });
+    });
+
+    it("supports wide unicode characters", () => {
+      const parser = str("❤_❤");
+      const state = strparse(parser)("❤_❤ to yall");
+      expect(state).toMatchObject({
+        error: null,
+        result: "❤_❤"
+      });
+      const state2 = strparse(parser)("お前は・・・もう死んでいる。");
+      expect(state2).toMatchObject({
+        error: {
+          from:"str",
+          index: 0,
+          expected: "'❤_❤'",
+          actual: "'お前は...'"
+        },
+        result: null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const parser = str("nothing");
+      const state = strparse(parser)("");
+      expect(state).toMatchObject({
+        error: {
+          index: 0,
+          expected: "\"nothing\"",
+          actual: EOS
+        },
+        result: null
+      });
+    });
+
+    it("throws when argument is invalid", () => {
+      expect(() => str("")).toThrowError(
+        new TypeError("[str] must be called with a string with strict positive length, got ")
+      );
+    });
+  });
+
+  describe("digit", () => {
+    it("works when successful", () => {
+      const state = strparse(digit)("1a");
+      expect(state).toMatchObject({
+        target:{
+          index:1
+        },
+        error:null,
+        result:"1"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(digit)("abc");
+      expect(state).toMatchObject({
+        error:{
+          from:"digit",
+          index:0,
+          expected:"a digit",
+          actual:"'abc...'",
+        },
+        result:null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const state = strparse(digit)("");
+      expect(state).toMatchObject({
+        result:null,
+        error:{
+          from:"digit",
+          index:0,
+          expected: "a digit",
+          actual: EOS,
+        }
+      });
+    });
+  });
+
+
+  describe("digits", () => {
+    it("works when successful", () => {
+      const state = strparse(digits)("4444J");
+      expect(state).toMatchObject({
+        target:{
+          index:4
+        },
+        error:null,
+        result:"4444"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(digits)("a1bc");
+      expect(state).toMatchObject({
+        error:{
+          from:"digits",
+          index:0,
+          expected:"digits",
+          actual:"'a1bc...'",
+        },
+        result:null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const state = strparse(digits)("");
+      expect(state).toMatchObject({
+        result:null,
+        error:{
+          from:"digits",
+          index:0,
+          expected: "digits",
+          actual: EOS,
+        }
+      });
+    });
+  });
+
 });
