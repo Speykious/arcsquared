@@ -458,7 +458,6 @@ describe("Parser generators", () => {
   describe("whitespace", () => {
     it("works when successful", () => {
       const state = strparse(whitespace)(" \t\nS");
-      console.log(state);
       expect(state).toMatchObject({
         target: {
           index: 3
