@@ -1,8 +1,9 @@
-import { charLength, reDigit, reDigits } from "./helpers";
+import { charLength, reDigit, reDigits, reLetter, reLetters, reWhitespaces } from "./helpers";
 import { EOS, UEOS } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
 import StringPStream, { encoder } from "./StringPStream";
+import { between, choice } from "./pcombinators";
 
 /** Takes a character and returns a parser that matches that character **exactly once**. */
 export const char = (c: string) => {
@@ -36,7 +37,7 @@ export const char = (c: string) => {
       actual: EOS
     }));
   }) as Parser<StringPStream, null, string>;
-}
+};
 
 /** Matches **exactly one** utf8 character. */
 export const anyChar = new Parser(s => {
@@ -135,6 +136,7 @@ export const regex = (re: RegExp) => {
   }) as Parser<StringPStream, null, string>;
 }
 
+/** Matches **exactly one** digit from the input.  */
 export const digit = regex(reDigit).errorMap(error =>
   new ParsingError({
     ...error.props,
@@ -142,6 +144,7 @@ export const digit = regex(reDigit).errorMap(error =>
     expected: "a digit"
   }));
 
+/** Matches **one or more** digit from the input. */
 export const digits = regex(reDigits).errorMap(error =>
   new ParsingError({
     ...error.props,
@@ -149,3 +152,109 @@ export const digits = regex(reDigits).errorMap(error =>
     expected: "digits"
   }));
 
+/** Matches **exactly one** letter from the input. */
+export const letter = regex(reLetter).errorMap(error =>
+  new ParsingError({
+    ...error.props,
+    from: "letter",
+    expected: "a letter"
+  }));
+
+/** Matches **one or more** letters from the input. */
+export const letters = regex(reLetters).errorMap(error =>
+  new ParsingError({
+    ...error.props,
+    from: "letters",
+    expected: "letters"
+  }));
+
+/** Takes a string as parameter and matches **one of its characters** from the input. */
+export const anyOfString = (cs: string) => {
+  if (!(typeof cs == "string"))
+    throw new TypeError(`[anyOfString] must be called with a string, got '${cs}'`);
+  
+  return new Parser(s => {
+    if (!(s.target instanceof StringPStream))
+      throw new TypeError(`[char] expected a StringPStream instance as target, got '${typeof s.target}'`);
+    if (s.error) return s;
+    const { index, target } = s;
+    const targetLength = target.length;
+    if (index < targetLength) {
+      const charWidth = target.getCharWidth(index);
+      if (index + charWidth <= targetLength) {
+        const char = target.peekChar();
+        return cs.includes(char)
+          ? s.resultify(target.nextChar())
+          : s.errorify(new ParsingError({
+              from: "char",
+              index,
+              expected: `character in "${cs}"`,
+              actual: `'${char}'`
+            }));
+      }
+    }
+    return s.errorify(new ParsingError({
+      from: "char",
+      index,
+      expected: `character in "${cs}"`,
+      actual: EOS
+    }));
+  }) as Parser<StringPStream, null, string>;
+};
+
+/** Is only a success if it has reached the end of stream. */
+export const endOfStream = new Parser(s => {
+  if (s.error) return s;
+  const { target, index } = s;
+  return index == target.length
+    ? s.resultify(null)
+    : s.errorify(new ParsingError({
+      index,
+      expected: EOS,
+      actual: `'${target.elementAt(index)}'`
+    }));
+});
+
+/** Matches **one or more** of any kind of whitespace (like `\s` from regexs). */
+export const whitespace = regex(reWhitespaces).errorMap(error =>
+  new ParsingError({
+    ...error.props,
+    from: "whitespace",
+    expected: "whitespace"
+  }));
+
+/**
+ * Takes a left and right bracket character and matches a sequence of characters in-between those brackets.
+ * 
+ * It will take care of matching escaped bracket characters with `\` and will unescape them before putting the final string in the result.
+ */
+
+export const bracketed = (bleft: string, bright: string) => {
+  if (charLength(bleft) !== 1)
+    throw new TypeError(`[bracketed] must be called with a single character, got '${bleft}'`);
+  if (charLength(bright) !== 1)
+    throw new TypeError(`[bracketed] must be called with a single character, got '${bright}'`);
+  
+  // Characters that have to be escaped.
+  // There are probably more which will be revealed by future bugs I guess.
+  if ("\\[](){}|+*.".includes(bleft)) bleft = "\\" + bleft;
+  if ("\\[](){}|+*.".includes(bright)) bright = "\\" + bright;
+  const innerParser = regex(new RegExp(`(\\\\\\\\|\\\\${bleft}|\\\\${bright}|[^${bleft}${bright}])+`))
+    .map(s => s
+      .replace("\\\\", "\\")
+      .replace(`\\${bleft}`, bleft)
+      .replace(`\\${bright}`, bright)
+    );
+  return between(char(bleft))(char(bright))(innerParser);
+}
+
+/**
+ * Takes a quote character and matches a sequence of characters in-between those quotes.
+ * 
+ * It will take care of matching escaped quote characters with `\` and will unescape them before putting the final string in the result.
+ */
+export const quoted = (q: string) => {
+  if (charLength(q) !== 1)
+    throw new TypeError(`[quoted] must be called with a single character, got '${q}'`);
+  return bracketed(q, q);
+};
