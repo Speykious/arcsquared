@@ -3,7 +3,7 @@ import { EOS, UEOS } from "./constants";
 import Parser from "./Parser";
 import ParsingError from "./ParsingError";
 import StringPStream, { encoder } from "./StringPStream";
-import { between, choice } from "./pcombinators";
+import { between } from "./pcombinators";
 
 /** Takes a character and returns a parser that matches that character **exactly once**. */
 export const char = (c: string) => {
