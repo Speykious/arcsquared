@@ -235,17 +235,19 @@ export const bracketed = (bleft: string, bright: string) => {
   if (charLength(bright) !== 1)
     throw new TypeError(`[bracketed] must be called with a single character, got '${bright}'`);
   
+  const cleft = char(bleft);
+  const cright = char(bright);
+
   // Characters that have to be escaped.
   // There are probably more which will be revealed by future bugs I guess.
   if ("\\[](){}|+*.".includes(bleft)) bleft = "\\" + bleft;
   if ("\\[](){}|+*.".includes(bright)) bright = "\\" + bright;
-  const innerParser = regex(new RegExp(`(\\\\\\\\|\\\\${bleft}|\\\\${bright}|[^${bleft}${bright}])+`))
+  const innerParser = regex(new RegExp(`^(\\\\\\\\|\\\\${bleft}|\\\\${bright}|[^${bleft}${bright}])+`))
     .map(s => s
-      .replace("\\\\", "\\")
       .replace(`\\${bleft}`, bleft)
       .replace(`\\${bright}`, bright)
-    );
-  return between(char(bleft))(char(bright))(innerParser);
+      .replace(/\\([\\\[\](){}|+*.])/g, "$1"));
+  return between(cleft)(cright)(innerParser);
 }
 
 /**
