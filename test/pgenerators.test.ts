@@ -8,7 +8,12 @@ import {
   UEOS,
   str,
   digit,
-  digits
+  digits,
+  letter,
+  letters,
+  anyOfString,
+  endOfStream,
+  whitespace
   //
 } from "../src/index";
 import IntPStream from "./IntPStream.asset";
@@ -119,7 +124,7 @@ describe("Parser generators", () => {
           index: 0
         },
         error: null,
-        result: 97
+        result: 97 // TODO
       });
     });
 
@@ -170,21 +175,20 @@ describe("Parser generators", () => {
       const parser = str("yes");
       const state = strparse(parser)("yes'nt");
       expect(state).toMatchObject({
-        error:null,
-        result:"yes"
+        error: null,
+        result: "yes"
       });
     });
-
 
     it("works when unsuccessful", () => {
       const parser = str("yes");
       const state = strparse(parser)("haha yes'nt");
       expect(state).toMatchObject({
-        error:{
-          from:"str",
-          index:0,
-          expected:'"yes"',
-          actual:'"hah..."',
+        error: {
+          from: "str",
+          index: 0,
+          expected: '"yes"',
+          actual: '"hah..."'
         },
         result: null
       });
@@ -200,7 +204,7 @@ describe("Parser generators", () => {
       const state2 = strparse(parser)("お前は・・・もう死んでいる。");
       expect(state2).toMatchObject({
         error: {
-          from:"str",
+          from: "str",
           index: 0,
           expected: "'❤_❤'",
           actual: "'お前は...'"
@@ -215,7 +219,7 @@ describe("Parser generators", () => {
       expect(state).toMatchObject({
         error: {
           index: 0,
-          expected: "\"nothing\"",
+          expected: '"nothing"',
           actual: EOS
         },
         result: null
@@ -224,7 +228,9 @@ describe("Parser generators", () => {
 
     it("throws when argument is invalid", () => {
       expect(() => str("")).toThrowError(
-        new TypeError("[str] must be called with a string with strict positive length, got ")
+        new TypeError(
+          "[str] must be called with a string with strict positive length, got "
+        )
       );
     });
   });
@@ -233,79 +239,257 @@ describe("Parser generators", () => {
     it("works when successful", () => {
       const state = strparse(digit)("1a");
       expect(state).toMatchObject({
-        target:{
-          index:1
+        target: {
+          index: 1
         },
-        error:null,
-        result:"1"
+        error: null,
+        result: "1"
       });
     });
 
     it("works when unsuccessful", () => {
       const state = strparse(digit)("abc");
       expect(state).toMatchObject({
-        error:{
-          from:"digit",
-          index:0,
-          expected:"a digit",
-          actual:"'abc...'",
+        error: {
+          from: "digit",
+          index: 0,
+          expected: "a digit",
+          actual: "'abc...'"
         },
-        result:null
+        result: null
       });
     });
 
     it("works when end of stream", () => {
       const state = strparse(digit)("");
       expect(state).toMatchObject({
-        result:null,
-        error:{
-          from:"digit",
-          index:0,
+        result: null,
+        error: {
+          from: "digit",
+          index: 0,
           expected: "a digit",
-          actual: EOS,
+          actual: EOS
         }
       });
     });
   });
 
-
   describe("digits", () => {
     it("works when successful", () => {
       const state = strparse(digits)("4444J");
       expect(state).toMatchObject({
-        target:{
-          index:4
+        target: {
+          index: 4
         },
-        error:null,
-        result:"4444"
+        error: null,
+        result: "4444"
       });
     });
 
     it("works when unsuccessful", () => {
       const state = strparse(digits)("a1bc");
       expect(state).toMatchObject({
-        error:{
-          from:"digits",
-          index:0,
-          expected:"digits",
-          actual:"'a1bc...'",
+        error: {
+          from: "digits",
+          index: 0,
+          expected: "digits",
+          actual: "'a1bc...'"
         },
-        result:null
+        result: null
       });
     });
 
     it("works when end of stream", () => {
       const state = strparse(digits)("");
       expect(state).toMatchObject({
-        result:null,
-        error:{
-          from:"digits",
-          index:0,
+        result: null,
+        error: {
+          from: "digits",
+          index: 0,
           expected: "digits",
-          actual: EOS,
+          actual: EOS
         }
       });
     });
   });
 
+  describe("letter", () => {
+    it("works when successful", () => {
+      const state = strparse(letter)("abcd");
+      expect(state).toMatchObject({
+        target: {
+          index: 1
+        },
+        error: null,
+        result: "a"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(letter)(" abc");
+      expect(state).toMatchObject({
+        error: {
+          from: "letter",
+          index: 0,
+          expected: "a letter",
+          actual: "' abc...'"
+        },
+        result: null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const state = strparse(letter)("");
+      expect(state).toMatchObject({
+        result: null,
+        error: {
+          from: "letter",
+          index: 0,
+          expected: "a letter",
+          actual: EOS
+        }
+      });
+    });
+  });
+
+  describe("letters", () => {
+    it("works when successful", () => {
+      const state = strparse(letters)("Jhin4");
+      expect(state).toMatchObject({
+        target: {
+          index: 4
+        },
+        error: null,
+        result: "Jhin"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(letters)("4Jhin");
+      expect(state).toMatchObject({
+        error: {
+          from: "letters",
+          index: 0,
+          expected: "letters",
+          actual: "'4Jhin...'"
+        },
+        result: null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const state = strparse(letters)("");
+      expect(state).toMatchObject({
+        result: null,
+        error: {
+          from: "letters",
+          index: 0,
+          expected: "letters",
+          actual: EOS
+        }
+      });
+    });
+  });
+
+  describe("anyOfString", () => {
+    it("works when successful", () => {
+      const parser = anyOfString("abcdefg");
+      const state = strparse(parser)("defg");
+      expect(state).toMatchObject({
+        target: {
+          index: 1
+        },
+        error: null,
+        result: "d"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const parser = anyOfString("abcd");
+      const state = strparse(parser)("Jabc");
+      expect(state).toMatchObject({
+        error: {
+          index: 0,
+          expected: 'character in "abcd"',
+          actual: "'J'"
+        },
+        result: null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const parser = anyOfString("abcd");
+      const state = strparse(parser)("");
+      expect(state).toMatchObject({
+        result: null,
+        error: {
+          index: 0,
+          expected: 'character in "abcd"',
+          actual: EOS
+        }
+      });
+    });
+  });
+
+  describe("endOfStream", () => {
+    it("works when successful", () => {
+      const stream = new StringPStream("");
+      const state = endOfStream.parse(stream);
+      expect(state).toMatchObject({
+        error: null,
+        result: null
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const stream = new StringPStream("yay");
+      const state = endOfStream.parse(stream);
+      expect(state).toMatchObject({
+        error: {
+          index: 0,
+          expected: EOS,
+          actual: "'121'" // TODO
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("whitespace", () => {
+    it("works when successful", () => {
+      const state = strparse(whitespace)(" \t\nS");
+      console.log(state);
+      expect(state).toMatchObject({
+        target: {
+          index: 3
+        },
+        error: null,
+        result: " \t\n"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(whitespace)("Jabc");
+      expect(state).toMatchObject({
+        error: {
+          index: 0,
+          expected: "whitespace",
+          actual: "'Jabc...'"
+        },
+        result: null
+      });
+    });
+
+    it("works when end of stream", () => {
+      const state = strparse(whitespace)("");
+      expect(state).toMatchObject({
+        result: null,
+        error: {
+          index: 0,
+          expected: "whitespace",
+          actual: EOS
+        }
+      });
+    });
+  });
 });
