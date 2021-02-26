@@ -1,3 +1,4 @@
+import { insp } from "../src/helpers";
 import {
   char,
   anyChar,
@@ -13,7 +14,8 @@ import {
   letters,
   anyOfString,
   endOfStream,
-  whitespace
+  whitespace,
+  regex
   //
 } from "../src/index";
 import IntPStream from "./IntPStream.asset";
@@ -125,6 +127,7 @@ describe("Parser generators", () => {
         },
         error: null,
         result: 97 // TODO
+        // What was that TODO for?
       });
     });
 
@@ -173,7 +176,7 @@ describe("Parser generators", () => {
   describe("str", () => {
     it("works when successful", () => {
       const parser = str("yes");
-      const state = strparse(parser)("yes'nt");
+      const state = strparse(parser)("yesn't");
       expect(state).toMatchObject({
         error: null,
         result: "yes"
@@ -182,7 +185,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const parser = str("yes");
-      const state = strparse(parser)("haha yes'nt");
+      const state = strparse(parser)("haha yesn't");
       expect(state).toMatchObject({
         error: {
           from: "str",
@@ -206,8 +209,10 @@ describe("Parser generators", () => {
         error: {
           from: "str",
           index: 0,
-          expected: "'❤_❤'",
-          actual: "'お前は...'"
+          expected: '"❤_❤"',
+          actual: '"お前�..."'
+          // I don't know if that unknown character should stay like this, or
+          // if I should take the entire character no matter the bytelength...
         },
         result: null
       });
@@ -235,6 +240,13 @@ describe("Parser generators", () => {
     });
   });
 
+  describe("regex", () => {
+    // Not writing the test yet, job for another time.
+    const parser = regex(/^a+/);
+    console.log(insp(strparse(parser)("aaaa")));
+    console.log(insp(strparse(parser)("bbbb")));
+  });
+
   describe("digit", () => {
     it("works when successful", () => {
       const state = strparse(digit)("1a");
@@ -254,7 +266,7 @@ describe("Parser generators", () => {
           from: "digit",
           index: 0,
           expected: "a digit",
-          actual: "'abc...'"
+          actual: '"abc..."'
         },
         result: null
       });
@@ -293,7 +305,7 @@ describe("Parser generators", () => {
           from: "digits",
           index: 0,
           expected: "digits",
-          actual: "'a1bc...'"
+          actual: '"a1bc..."'
         },
         result: null
       });
@@ -332,7 +344,7 @@ describe("Parser generators", () => {
           from: "letter",
           index: 0,
           expected: "a letter",
-          actual: "' abc...'"
+          actual: '" abc..."'
         },
         result: null
       });
@@ -371,7 +383,7 @@ describe("Parser generators", () => {
           from: "letters",
           index: 0,
           expected: "letters",
-          actual: "'4Jhin...'"
+          actual: '"4Jhin..."'
         },
         result: null
       });
@@ -448,7 +460,8 @@ describe("Parser generators", () => {
         error: {
           index: 0,
           expected: EOS,
-          actual: "'121'" // TODO
+          actual: 121 // Todo?
+          // Decided to return the element itself
         },
         result: null
       });
@@ -458,7 +471,7 @@ describe("Parser generators", () => {
   describe("whitespace", () => {
     it("works when successful", () => {
       const state = strparse(whitespace)(" \t\nS");
-      console.log(state);
+      console.log(insp(state));
       expect(state).toMatchObject({
         target: {
           index: 3
@@ -474,7 +487,7 @@ describe("Parser generators", () => {
         error: {
           index: 0,
           expected: "whitespace",
-          actual: "'Jabc...'"
+          actual: '"Jabc..."'
         },
         result: null
       });
