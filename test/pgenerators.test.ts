@@ -19,8 +19,8 @@ import {
   //
 } from "../src/index";
 import IntPStream from "./IntPStream.asset";
-
 import TokenPStream from "./TokenPStream.asset";
+insp("illusion");
 
 describe("Parser generators", () => {
   describe("char", () => {
@@ -241,10 +241,32 @@ describe("Parser generators", () => {
   });
 
   describe("regex", () => {
-    // Not writing the test yet, job for another time.
     const parser = regex(/^a+/);
-    console.log(insp(strparse(parser)("aaaa")));
-    console.log(insp(strparse(parser)("bbbb")));
+    
+    it("works when successful", () => {
+      const state = strparse(parser)("aaaa...");
+      expect(state).toMatchObject({
+        target: {
+          index: 4
+        },
+        error: null,
+        result: "aaaa"
+      });
+    });
+
+    it("works when unsuccessful", () => {
+      const state = strparse(parser)("bbbb???");
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: {
+          from: "regex",
+          expected: "string matching /^a+/",
+          actual: '"bbbb?..."'
+        }
+      });
+    });
   });
 
   describe("digit", () => {
@@ -471,7 +493,6 @@ describe("Parser generators", () => {
   describe("whitespace", () => {
     it("works when successful", () => {
       const state = strparse(whitespace)(" \t\nS");
-      console.log(insp(state));
       expect(state).toMatchObject({
         target: {
           index: 3
