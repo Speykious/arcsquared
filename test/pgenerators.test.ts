@@ -15,8 +15,9 @@ import {
   anyOfString,
   endOfStream,
   whitespace,
-  regex
-  //
+  regex,
+  bracketed,
+  quoted
 } from "../src/index";
 import IntPStream from "./IntPStream.asset";
 import TokenPStream from "./TokenPStream.asset";
@@ -267,6 +268,20 @@ describe("Parser generators", () => {
         }
       });
     });
+
+    it("works when end of stream", () => {
+      const state = strparse(parser)("");
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        error: {
+          from: "regex",
+          expected: "string matching /^a+/",
+          actual: EOS
+        }
+      })
+    })
   });
 
   describe("digit", () => {
@@ -521,6 +536,140 @@ describe("Parser generators", () => {
         error: {
           index: 0,
           expected: "whitespace",
+          actual: EOS
+        }
+      });
+    });
+  });
+
+  describe("bracketed", () => {
+    const parser = bracketed("<", ">");
+    
+    it("parses inner content", () => {
+      const state = strparse(parser)("<something> like this");
+      expect(state).toMatchObject({
+        target: {
+          index: 11
+        },
+        result: "something",
+        error: null
+      });
+    });
+
+    it("properly escapes brackets", () => {
+      const state = strparse(parser)("<something \\<different\\>> I guess");
+      expect(state).toMatchObject({
+        target: {
+          index: 25
+        },
+        result: "something <different>",
+        error: null
+      });
+    });
+    
+    it("works with regex-sensible characters", () => {
+      const state = strparse(parser)("<some[]thing>");
+      expect(state).toMatchObject({
+        target: {
+          index: 13
+        },
+        result: "some[]thing",
+        error: null
+      });
+    });
+
+    it("fails when it doesn't start with the left bracket", () => {
+      const state = strparse(parser)("nothing");
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        result: null,
+        error: {
+          from: "char", // TODO: Maybe change the origin there?
+          expected: "character '<'",
+          actual: "character 'n'"
+        }
+      });
+    });
+
+    it("fails when it doesn't end with the right bracket", () => {
+      const state = strparse(parser)("<PTSDs in unclosed angle bracket");
+      expect(state).toMatchObject({
+        target: {
+          index: 32
+        },
+        result: null,
+        error: {
+          from: "char", // TODO: Maybbe change the origin there (again)?
+          expected: "character '>'",
+          actual: EOS
+        }
+      });
+    });
+  });
+
+  describe("quoted", () => {
+    const parser = quoted("'");
+    
+    it("parses inner content", () => {
+      const state = strparse(parser)("'something' like this");
+      expect(state).toMatchObject({
+        target: {
+          index: 11
+        },
+        result: "something",
+        error: null
+      });
+    });
+
+    it("properly escapes quotes", () => {
+      const state = strparse(parser)("'something \\'different\\'' I guess");
+      expect(state).toMatchObject({
+        target: {
+          index: 25
+        },
+        result: "something 'different'",
+        error: null
+      });
+    });
+    
+    it("works with regex-sensible characters", () => {
+      const state = strparse(parser)("'some[]thing'");
+      expect(state).toMatchObject({
+        target: {
+          index: 13
+        },
+        result: "some[]thing",
+        error: null
+      });
+    });
+
+    it("fails when it doesn't start with the left quote", () => {
+      const state = strparse(parser)("nothing");
+      expect(state).toMatchObject({
+        target: {
+          index: 0
+        },
+        result: null,
+        error: {
+          from: "char", // TODO: Maybe change the origin there?
+          expected: "character '''",
+          actual: "character 'n'"
+        }
+      });
+    });
+
+    it("fails when it doesn't end with the right quote", () => {
+      const state = strparse(parser)("'PTSDs in unclosed quote");
+      expect(state).toMatchObject({
+        target: {
+          index: 24
+        },
+        result: null,
+        error: {
+          from: "char", // TODO: Maybbe change the origin there (again)?
+          expected: "character '''",
           actual: EOS
         }
       });
