@@ -90,7 +90,6 @@ export const str = (cs: string) => {
         actual: EOS
       }));
     const sai = target.getString(index, es.byteLength);
-    console.log("string got:", sai);
     return cs === sai
       ? s.resultify(target.nextString(es.byteLength))
       : s.errorify(new ParsingError({
@@ -120,7 +119,7 @@ export const regex = (re: RegExp) => {
       return s.errorify(new ParsingError({
         from: "regex",
         index,
-        expected: `string matching '${re}'`,
+        expected: `string matching ${re}`,
         actual: EOS
       }))
     const match = remaining.match(re);
@@ -131,8 +130,8 @@ export const regex = (re: RegExp) => {
       return s.errorify(new ParsingError({
         from: "regex",
         index,
-        expected: `string matching '${re}'`,
-        actual: `'${remaining.slice(0, 5)}...'`
+        expected: `string matching ${re}`,
+        actual: `"${remaining.slice(0, 5)}..."`
       }));
   }) as Parser<StringPStream, null, string>;
 }
@@ -212,7 +211,7 @@ export const endOfStream = new Parser(s => {
     : s.errorify(new ParsingError({
       index,
       expected: EOS,
-      actual: `'${target.elementAt(index)}'`
+      actual: target.elementAt(index)
     }));
 });
 
