@@ -1,7 +1,9 @@
 import { insp } from "../src/helpers";
 import Parser, {
+  char,
   getData,
   ParsingError,
+  pipe,
   setData,
   str,
   StringPStream,
@@ -102,7 +104,7 @@ describe("Parser combinators", () => {
       const state = strparse(parser)("Where are the knives.");
       expect(state).toMatchObject({
         target: {
-          index: 4 // Wait it's not 5???
+          index: 5
         },
         data: "kowa",
         error: null,
@@ -120,6 +122,36 @@ describe("Parser combinators", () => {
         error: {
           expected: '"Where"',
           actual: '"You\'r..."'
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("pipe", () => {
+    const parser = pipe<StringPStream, null, string[]>([str("bruh"), char(","), str("respectfully")]);
+    it("should return the result of the last parser", () => {
+      const state = strparse(parser)("bruh,respectfully");
+      expect(state).toMatchObject({
+        target: {
+          index: "bruh,respectfully".length
+        },
+        data: null,
+        error: null,
+        result: "respectfully"
+      });
+    });
+
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("bruh,wat");
+      expect(state).toMatchObject({
+        target: {
+          index: 5
+        },
+        data: null,
+        error: {
+          expected: '"respectfully"',
+          actual: '"wat"'
         },
         result: null
       });
