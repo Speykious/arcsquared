@@ -179,6 +179,9 @@ describe("Parser generators", () => {
       const parser = str("yes");
       const state = strparse(parser)("yesn't");
       expect(state).toMatchObject({
+        target: {
+          index: 3
+        },
         error: null,
         result: "yes"
       });

@@ -122,6 +122,7 @@ export default class StringPStream implements PStream<number> {
         return dataView.getUint8(this.index);
       }
     );
+    this.index++;
     return decoder.decode(bytes);
   }
 
