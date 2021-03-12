@@ -15,7 +15,7 @@
     "build": "tsc -b --verbose",
     "wild": "tsc -b --watch",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
-    "west": "mocha -wr ts-node/register test/**/*.test.ts"
+    "west": "mocha -r ts-node/register test/**/*.test.ts -w"
   },
   "prettier": {
     "semi": true,
