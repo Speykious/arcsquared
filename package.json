@@ -12,9 +12,10 @@
     "lib"
   ],
   "scripts": {
-    "start": "tsc -b --watch",
     "build": "tsc -b --verbose",
-    "test": "mocha -r ts-node/register test/**/*.test.ts"
+    "wild": "tsc -b --watch",
+    "test": "mocha -r ts-node/register test/**/*.test.ts",
+    "west": "mocha -wr ts-node/register test/**/*.test.ts"
   },
   "prettier": {
     "semi": true,
