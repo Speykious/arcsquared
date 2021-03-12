@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import { $nextOf, $nextsOf } from "../src/index";
 import IntPStream from "./IntPStream.asset";
 import TokenPStream, { Token } from "./TokenPStream.asset";
@@ -8,37 +9,37 @@ describe("PStream", () => {
     const stream = new IntPStream(array);
 
     it("has the right length", () => {
-      expect(stream.length).toEqual(array.length);
+      expect(stream.length).to.equal(array.length);
     });
 
     it("gives the correct elements", () => {
-      expect(stream.elementAt(0)).toEqual(1);
-      expect(stream.elementAt(2)).toEqual(3);
-      expect(stream.elementAt(4)).toBeNull();
+      expect(stream.elementAt(0)).to.deep.equal(1);
+      expect(stream.elementAt(2)).to.deep.equal(3);
+      expect(stream.elementAt(4)).to.be.null;
     });
 
     const streamClone = stream.clone();
     it("properly clones itself", () => {
-      expect(streamClone.numbers).toBe(stream.numbers);
-      expect(streamClone.index).toEqual(stream.index);
+      expect(streamClone.numbers).to.equal(stream.numbers);
+      expect(streamClone.index).to.deep.equal(stream.index);
     });
 
     it("gives the next element properly", () => {
       const firstElement = $nextOf(stream);
-      expect(firstElement).toEqual(1);
-      expect(stream.index).toEqual(1);
+      expect(firstElement).to.deep.equal(1);
+      expect(stream.index).to.deep.equal(1);
     });
 
     it("gives next elements properly", () => {
       const elements = $nextsOf(stream, 5);
-      expect(elements).toEqual([2, 3, 4]);
-      expect(stream.index).toEqual(4);
+      expect(elements).to.deep.equal([2, 3, 4]);
+      expect(stream.index).to.deep.equal(4);
     });
 
     it("gives nothing when no elements are left", () => {
       const nothing = $nextOf(stream);
-      expect(nothing).toBeNull();
-      expect(stream.index).toEqual(4);
+      expect(nothing).to.be.null;
+      expect(stream.index).to.deep.equal(4);
     });
   });
 
@@ -51,37 +52,37 @@ describe("PStream", () => {
     ];
     const stream = new TokenPStream(array);
     it("has the right length", () => {
-      expect(stream.length).toEqual(array.length);
+      expect(stream.length).to.deep.equal(array.length);
     });
 
     it("gives the correct elements", () => {
-      expect(stream.elementAt(0)).toEqual(array[0]);
-      expect(stream.elementAt(2)).toEqual(array[2]);
-      expect(stream.elementAt(4)).toBeNull();
+      expect(stream.elementAt(0)).to.deep.equal(array[0]);
+      expect(stream.elementAt(2)).to.deep.equal(array[2]);
+      expect(stream.elementAt(4)).to.be.null;
     });
 
     const streamClone = stream.clone();
     it("properly clones itself", () => {
-      expect(streamClone.tokens).toBe(stream.tokens);
-      expect(streamClone.index).toEqual(stream.index);
+      expect(streamClone.tokens).to.equal(stream.tokens);
+      expect(streamClone.index).to.deep.equal(stream.index);
     });
 
     it("gives the next element properly", () => {
       const firstElement = $nextOf(stream);
-      expect(firstElement).toEqual(array[0]);
-      expect(stream.index).toEqual(1);
+      expect(firstElement).to.deep.equal(array[0]);
+      expect(stream.index).to.deep.equal(1);
     });
 
     it("gives next elements properly", () => {
       const elements = $nextsOf(stream, 5);
-      expect(elements).toEqual(array.slice(1, 4));
-      expect(stream.index).toEqual(4);
+      expect(elements).to.deep.equal(array.slice(1, 4));
+      expect(stream.index).to.deep.equal(4);
     });
 
     it("gives nothing when no elements are left", () => {
       const nothing = $nextOf(stream);
-      expect(nothing).toBeNull();
-      expect(stream.index).toEqual(4);
+      expect(nothing).to.be.null;
+      expect(stream.index).to.deep.equal(4);
     });
   });
 });

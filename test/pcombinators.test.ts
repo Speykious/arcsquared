@@ -1,3 +1,7 @@
+import { expect, use as chaiUse } from "chai";
+import matchObject from "./helpers/matchObject.model";
+chaiUse(matchObject);
+
 import { insp } from "../src/helpers";
 import Parser, {
   char,
@@ -16,7 +20,7 @@ describe("Parser combinators", () => {
   describe("getData", () => {
     const state = getData.parse(new StringPStream("something"));
     it("should get empty data of successful state", () => {
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -29,7 +33,7 @@ describe("Parser combinators", () => {
     // Gura.
     const state2 = getData.pf(state.dataify("a"));
     it("should get data of successful state", () => {
-      expect(state2).toMatchObject({
+      expect(state2).to.matchObject({
         target: {
           index: 0
         },
@@ -47,7 +51,7 @@ describe("Parser combinators", () => {
       )
     );
     it("should not get data of failing state", () => {
-      expect(state3).toMatchObject({
+      expect(state3).to.matchObject({
         target: {
           index: 0
         },
@@ -65,7 +69,7 @@ describe("Parser combinators", () => {
     const parser = setData("AAAA! Stay determined...");
     const state = parser.parse(new StringPStream("Determination."));
     it("should set data to a successful state", () => {
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -83,7 +87,7 @@ describe("Parser combinators", () => {
       )
     );
     it("should not set data to a failing state", () => {
-      expect(state2).toMatchObject({
+      expect(state2).to.matchObject({
         target: {
           index: 0
         },
@@ -102,7 +106,7 @@ describe("Parser combinators", () => {
     
     it("should have the data when successful", () => {
       const state = strparse(parser)("Where are the knives.");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 5
         },
@@ -114,7 +118,7 @@ describe("Parser combinators", () => {
 
     it("should still have the data when unsuccessful", () => {
       const state = strparse(parser)("You're going to have a bad time.");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -132,7 +136,7 @@ describe("Parser combinators", () => {
     const parser = pipe<StringPStream, null, string[]>([str("bruh"), char(","), str("respectfully")]);
     it("should return the result of the last parser", () => {
       const state = strparse(parser)("bruh,respectfully");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: "bruh,respectfully".length
         },
@@ -144,7 +148,7 @@ describe("Parser combinators", () => {
 
     it("should return the error of the failing parser", () => {
       const state = strparse(parser)("bruh,wat");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 5
         },

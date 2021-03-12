@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import { StringPStream, encoder, $nextOf, $nextsOf } from "../src/index";
 
 describe("StringPStream", () => {
@@ -5,42 +6,42 @@ describe("StringPStream", () => {
   const stream = new StringPStream(s);
   
   it("has the right length", () => {
-    expect(stream.length).toEqual(s.byteLength);
+    expect(stream.length).to.equal(s.byteLength);
   });
 
   it("gives the correct elements", () => {
-    expect(stream.elementAt(0)).toEqual(s[0]);
-    expect(stream.elementAt(2)).toEqual(s[2]);
-    expect(stream.elementAt(69)).toBeNull();
+    expect(stream.elementAt(0)).to.equal(s[0]);
+    expect(stream.elementAt(2)).to.equal(s[2]);
+    expect(stream.elementAt(69)).to.be.null;
   });
 
   it("gives the next element properly", () => {
     const firstElement = $nextOf(stream);
-    expect(firstElement).toEqual(s[0]);
-    expect(stream.index).toEqual(1);
+    expect(firstElement).to.equal(s[0]);
+    expect(stream.index).to.equal(1);
   });
 
   it("gives next elements properly", () => {
     const elements = $nextsOf(stream, 20);
-    expect(elements).toEqual(Array.from(s.slice(1, 21)));
-    expect(stream.index).toEqual(21);
+    expect(elements).to.deep.equal(Array.from(s.slice(1, 21)));
+    expect(stream.index).to.equal(21);
   });
 
   it("supports normal ascii characters", () => {
     const chars = stream.nextChars(2);
-    expect(chars).toEqual("r ");
-    expect(stream.index).toEqual(23);
+    expect(chars).to.equal("r ");
+    expect(stream.index).to.equal(23);
   });
 
   it("supports wide unicode characters", () => {
     const cool = stream.nextChar();
-    expect(cool).toEqual("😎");
-    expect(stream.index).toEqual(27);
+    expect(cool).to.equal("😎");
+    expect(stream.index).to.equal(27);
   });
   
   it("gives nothing when no elements are left", () => {
     const nothing = $nextOf(stream);
-    expect(nothing).toBeNull();
-    expect(stream.index).toEqual(27);
+    expect(nothing).to.be.null;
+    expect(stream.index).to.equal(27);
   });
 });

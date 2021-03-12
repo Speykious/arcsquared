@@ -1,3 +1,6 @@
+import { expect, use as chaiUse } from "chai";
+import matchObject from "./helpers/matchObject.model";
+chaiUse(matchObject);
 import { insp } from "../src/helpers";
 import {
   char,
@@ -28,7 +31,7 @@ describe("Parser generators", () => {
     it("works when successful", () => {
       const parser = char("a");
       const state = strparse(parser)("abcd");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: "a"
       });
@@ -37,7 +40,7 @@ describe("Parser generators", () => {
     it("works when unsuccessful", () => {
       const parser = char("a");
       const state = strparse(parser)("bad");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: "character 'a'",
@@ -50,12 +53,12 @@ describe("Parser generators", () => {
     it("supports wide unicode characters", () => {
       const parser = char("❤");
       const state = strparse(parser)("❤ to yall");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: "❤"
       });
       const state2 = strparse(parser)("お前は・・・もう死んでいる。");
-      expect(state2).toMatchObject({
+      expect(state2).to.matchObject({
         error: {
           index: 0,
           expected: "character '❤'",
@@ -68,7 +71,7 @@ describe("Parser generators", () => {
     it("works when end of stream", () => {
       const parser = char("a");
       const state = strparse(parser)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: "character 'a'",
@@ -79,11 +82,13 @@ describe("Parser generators", () => {
     });
 
     it("throws when argument is invalid", () => {
-      expect(() => char("ab")).toThrowError(
-        new TypeError("[char] must be called with a single character, got 'ab'")
+      expect(() => char("ab")).to.throw(
+        TypeError,
+        "[char] must be called with a single character, got 'ab'"
       );
-      expect(() => char("")).toThrowError(
-        new TypeError("[char] must be called with a single character, got ''")
+      expect(() => char("")).to.throw(
+        TypeError,
+        "[char] must be called with a single character, got ''"
       );
     });
   });
@@ -91,7 +96,7 @@ describe("Parser generators", () => {
   describe("anyChar", () => {
     it("works when successful", () => {
       const state = strparse(anyChar)("abcd");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: "a"
       });
@@ -99,7 +104,7 @@ describe("Parser generators", () => {
 
     it("supports wide unicode characters", () => {
       const state = strparse(anyChar)("❤ to yall");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: "❤"
       });
@@ -107,7 +112,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(anyChar)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: "any character",
@@ -122,7 +127,7 @@ describe("Parser generators", () => {
     it("works with StringPStream", () => {
       const stream = new StringPStream("abc");
       const state = peek.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -138,7 +143,7 @@ describe("Parser generators", () => {
         { type: "minutes", value: "25" }
       ]);
       const state = peek.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -150,7 +155,7 @@ describe("Parser generators", () => {
     it("works with IntPStream", () => {
       const stream = new IntPStream([42, 69]);
       const state = peek.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -162,7 +167,7 @@ describe("Parser generators", () => {
     it("works when end of stream", () => {
       const stream = new StringPStream("");
       const state = peek.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -178,7 +183,7 @@ describe("Parser generators", () => {
     it("works when successful", () => {
       const parser = str("yes");
       const state = strparse(parser)("yesn't");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 3
         },
@@ -190,7 +195,7 @@ describe("Parser generators", () => {
     it("works when unsuccessful", () => {
       const parser = str("yes");
       const state = strparse(parser)("haha yesn't");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           from: "str",
           index: 0,
@@ -204,12 +209,12 @@ describe("Parser generators", () => {
     it("supports wide unicode characters", () => {
       const parser = str("❤_❤");
       const state = strparse(parser)("❤_❤ to yall");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: "❤_❤"
       });
       const state2 = strparse(parser)("お前は・・・もう死んでいる。");
-      expect(state2).toMatchObject({
+      expect(state2).to.matchObject({
         error: {
           from: "str",
           index: 0,
@@ -225,7 +230,7 @@ describe("Parser generators", () => {
     it("works when end of stream", () => {
       const parser = str("nothing");
       const state = strparse(parser)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: '"nothing"',
@@ -236,10 +241,9 @@ describe("Parser generators", () => {
     });
 
     it("throws when argument is invalid", () => {
-      expect(() => str("")).toThrowError(
-        new TypeError(
-          "[str] must be called with a string with strict positive length, got "
-        )
+      expect(() => str("")).to.throw(
+        TypeError,
+        "[str] must be called with a string with strict positive length, got "
       );
     });
   });
@@ -249,7 +253,7 @@ describe("Parser generators", () => {
     
     it("works when successful", () => {
       const state = strparse(parser)("aaaa...");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 4
         },
@@ -260,7 +264,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(parser)("bbbb???");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -274,7 +278,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(parser)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -290,7 +294,7 @@ describe("Parser generators", () => {
   describe("digit", () => {
     it("works when successful", () => {
       const state = strparse(digit)("1a");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 1
         },
@@ -301,7 +305,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(digit)("abc");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           from: "digit",
           index: 0,
@@ -314,7 +318,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(digit)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           from: "digit",
@@ -329,7 +333,7 @@ describe("Parser generators", () => {
   describe("digits", () => {
     it("works when successful", () => {
       const state = strparse(digits)("4444J");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 4
         },
@@ -340,7 +344,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(digits)("a1bc");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           from: "digits",
           index: 0,
@@ -353,7 +357,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(digits)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           from: "digits",
@@ -368,7 +372,7 @@ describe("Parser generators", () => {
   describe("letter", () => {
     it("works when successful", () => {
       const state = strparse(letter)("abcd");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 1
         },
@@ -379,7 +383,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(letter)(" abc");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           from: "letter",
           index: 0,
@@ -392,7 +396,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(letter)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           from: "letter",
@@ -407,7 +411,7 @@ describe("Parser generators", () => {
   describe("letters", () => {
     it("works when successful", () => {
       const state = strparse(letters)("Jhin4");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 4
         },
@@ -418,7 +422,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(letters)("4Jhin");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           from: "letters",
           index: 0,
@@ -431,7 +435,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(letters)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           from: "letters",
@@ -447,7 +451,7 @@ describe("Parser generators", () => {
     it("works when successful", () => {
       const parser = anyOfString("abcdefg");
       const state = strparse(parser)("defg");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 1
         },
@@ -459,7 +463,7 @@ describe("Parser generators", () => {
     it("works when unsuccessful", () => {
       const parser = anyOfString("abcd");
       const state = strparse(parser)("Jabc");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: 'character in "abcd"',
@@ -472,7 +476,7 @@ describe("Parser generators", () => {
     it("works when end of stream", () => {
       const parser = anyOfString("abcd");
       const state = strparse(parser)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           index: 0,
@@ -487,7 +491,7 @@ describe("Parser generators", () => {
     it("works when successful", () => {
       const stream = new StringPStream("");
       const state = endOfStream.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: null,
         result: null
       });
@@ -496,7 +500,7 @@ describe("Parser generators", () => {
     it("works when unsuccessful", () => {
       const stream = new StringPStream("yay");
       const state = endOfStream.parse(stream);
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: EOS,
@@ -511,7 +515,7 @@ describe("Parser generators", () => {
   describe("whitespace", () => {
     it("works when successful", () => {
       const state = strparse(whitespace)(" \t\nS");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 3
         },
@@ -522,7 +526,7 @@ describe("Parser generators", () => {
 
     it("works when unsuccessful", () => {
       const state = strparse(whitespace)("Jabc");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         error: {
           index: 0,
           expected: "whitespace",
@@ -534,7 +538,7 @@ describe("Parser generators", () => {
 
     it("works when end of stream", () => {
       const state = strparse(whitespace)("");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         result: null,
         error: {
           index: 0,
@@ -550,7 +554,7 @@ describe("Parser generators", () => {
     
     it("parses inner content", () => {
       const state = strparse(parser)("<something> like this");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 11
         },
@@ -561,7 +565,7 @@ describe("Parser generators", () => {
 
     it("properly escapes brackets", () => {
       const state = strparse(parser)("<something \\<different\\>> I guess");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 25
         },
@@ -572,7 +576,7 @@ describe("Parser generators", () => {
     
     it("works with regex-sensible characters", () => {
       const state = strparse(parser)("<some[]thing>");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 13
         },
@@ -583,7 +587,7 @@ describe("Parser generators", () => {
 
     it("fails when it doesn't start with the left bracket", () => {
       const state = strparse(parser)("nothing");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -598,7 +602,7 @@ describe("Parser generators", () => {
 
     it("fails when it doesn't end with the right bracket", () => {
       const state = strparse(parser)("<PTSDs in unclosed angle bracket");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 32
         },
@@ -617,7 +621,7 @@ describe("Parser generators", () => {
     
     it("parses inner content", () => {
       const state = strparse(parser)("'something' like this");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 11
         },
@@ -628,7 +632,7 @@ describe("Parser generators", () => {
 
     it("properly escapes quotes", () => {
       const state = strparse(parser)("'something \\'different\\'' I guess");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 25
         },
@@ -639,7 +643,7 @@ describe("Parser generators", () => {
     
     it("works with regex-sensible characters", () => {
       const state = strparse(parser)("'some[]thing'");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 13
         },
@@ -650,7 +654,7 @@ describe("Parser generators", () => {
 
     it("fails when it doesn't start with the left quote", () => {
       const state = strparse(parser)("nothing");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 0
         },
@@ -665,7 +669,7 @@ describe("Parser generators", () => {
 
     it("fails when it doesn't end with the right quote", () => {
       const state = strparse(parser)("'PTSDs in unclosed quote");
-      expect(state).toMatchObject({
+      expect(state).to.matchObject({
         target: {
           index: 24
         },
