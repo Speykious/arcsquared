@@ -675,7 +675,7 @@ describe("Parser generators", () => {
         },
         result: null,
         error: {
-          from: "char", // TODO: Maybbe change the origin there (again)?
+          from: "char", // TODO: Maybe change the origin there (again)?
           expected: "character '''",
           actual: EOS
         }
