@@ -82,13 +82,20 @@ export const str = (cs: string) => {
     if (s.error) return s;
     const { index, target } = s;
     const remainingBytes = target.length - index;
-    if (remainingBytes < es.byteLength)
+    if (!remainingBytes)
       return s.errorify(new ParsingError({
         from: "str",
         index,
         expected: `"${cs}"`,
         actual: EOS
       }));
+    if (remainingBytes < es.byteLength)
+      return s.errorify(new ParsingError({
+        from: "str",
+        index,
+        expected: `"${cs}"`,
+        actual: `"${target.getString(index, remainingBytes)}"`
+      }))
     const sai = target.getString(index, es.byteLength);
     return cs === sai
       ? s.resultify(target.nextString(es.byteLength))

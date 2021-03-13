@@ -240,6 +240,19 @@ describe("Parser generators", () => {
       });
     });
 
+    it("works when actual string is shorter than expected string", () => {
+      const parser = str("nothing");
+      const state = strparse(parser)("no");
+      expect(state).to.matchObject({
+        error: {
+          index: 0,
+          expected: '"nothing"',
+          actual: '"no"'
+        },
+        result: null
+      })
+    })
+
     it("throws when argument is invalid", () => {
       expect(() => str("")).to.throw(
         TypeError,
