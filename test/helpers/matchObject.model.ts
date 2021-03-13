@@ -38,9 +38,13 @@ export function getDiffFromMatch(obj: any, m: any): any {
     || typeof m !== "object" || m === null)
     return obj;
   const diffFM: { [key: string]: any } = {};
-  for (const prop in m)
-    if (obj[prop] !== undefined)
+  for (const prop in m) {
+    if (obj[prop] === undefined) continue;
+    if (typeof obj[prop] !== "object" || obj[prop] instanceof Array)
       diffFM[prop] = obj[prop];
+    else
+      diffFM[prop] = getDiffFromMatch(obj[prop], m[prop]);
+  }
   
   return diffFM;
 };
