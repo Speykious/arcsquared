@@ -8,12 +8,23 @@ import Parser, {
   getData,
   ParsingError,
   pipe,
+  compose,
+  tap,
+  decide,
+  fail,
+  succeedWith,
+  either,
+  parse,
   setData,
   str,
   StringPStream,
   strparse,
-  withData
-} from "../src/index";
+  withData,
+  regex,
+  letter,
+  digit,
+  tup,
+} from "../src";
 insp("illusion");
 
 describe("Parser combinators", () => {
@@ -158,6 +169,180 @@ describe("Parser combinators", () => {
           actual: '"wat"'
         },
         result: null
+      });
+    });
+  });
+
+  describe("compose", () => {
+    const parser = compose<StringPStream, null, string[]>([str("respectfully"), char(","), str("bruh")]);
+    it("should return the result of the first parser", () => {
+      const state = strparse(parser)("bruh,respectfully");
+      expect(state).to.matchObject({
+        target: {
+          index: "bruh,respectfully".length
+        },
+        data: null,
+        error: null,
+        result: "respectfully"
+      });
+    });
+
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("bruh,wat");
+      expect(state).to.matchObject({
+        target: {
+          index: 5
+        },
+        data: null,
+        error: {
+          expected: '"respectfully"',
+          actual: '"wat"'
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("tap", () => {
+    const outerRef: any = { state: null };
+    const parser = pipe<StringPStream, null, string[]>([
+      str("a."),
+      tap(s => { outerRef.state = s; })
+    ]);
+    it("should set the state when the previous parser is successful", () => {
+      const state = strparse(parser)("a.");
+      expect(outerRef.state).to.equal(state);
+    });
+
+    it("should also set the state when the previous parser is unsuccessful", () => {
+      const state = strparse(parser)("b?");
+      expect(outerRef.state).to.equal(state);
+    });
+  });
+
+  describe("parse", () => {
+    const parser = str("thing");
+    it("should be equivalent to the Parser.prototype.parse function", () => {
+      const input = new StringPStream("thing here");
+      expect(parser.parse(input.clone())).to.deep.equal(parse(parser)(input));
+    });
+  });
+
+  describe("strparse", () => {
+    const parser = str("thonk");
+    it("should be equivalent to parsing a StringPStream", () => {
+      const input = "thonking of something interesting";
+      expect(strparse(parser)(input)).to.deep.equal(parser.parse(new StringPStream(input)));
+    });
+  });
+
+  describe("decide", () => {
+    const parser = pipe<StringPStream, null, [string, string | number]>([
+      regex(/^(letter|digit):/),
+      decide<StringPStream, null, string, string | number>(
+        r => r === "letter:" ? letter : digit.map(Number)
+      )
+    ]);
+    it("should choose the right parser (1/2)", () => {
+      const state = strparse(parser)("letter:a");
+      expect(state).to.matchObject({
+        target: {
+          index: "letter:a".length
+        },
+        data: null,
+        error: null,
+        result: "a"
+      });
+    });
+
+    it("should choose the right parser (2/2)", () => {
+      const state = strparse(parser)("digit:3");
+      expect(state).to.matchObject({
+        target: {
+          index: "digit:3".length
+        },
+        data: null,
+        error: null,
+        result: 3
+      });
+    });
+
+    it("shouldn't do anything if the previous state is unsuccessful", () => {
+      const state = strparse(parser)("wtf:isthis");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          actual: '"wtf:i..."',
+          expected: "string matching /^(letter|digit):/"
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("fail", () => {
+    const parser = fail(new ParsingError({ message: "duh" }));
+    it("should just fail, duh", () => {
+      const state = parser.parse(new StringPStream("bruh"));
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          actual: null,
+          expected: null,
+          message: "duh"
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("succeedWith", () => {
+    const parser = succeedWith([1, 2, 3]);
+    it("should just work", () => {
+      const state = parser.parse(new StringPStream("it just werks"));
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: null,
+        result: [1, 2, 3]
+      });
+    });
+  });
+
+  describe("either", () => {
+    const parser = either(str("oui"));
+    it("should success", () => {
+      const state = strparse(parser)("oui madame");
+      expect(state).to.matchObject({
+        target: {
+          index: 3
+        },
+        data: null,
+        error: null,
+        result: "oui"
+      });
+    });
+
+    it("should failn't", () => {
+      const state = strparse(parser)("non monsieur");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: null,
+        result: {
+          expected: '"oui"',
+          actual: '"non..."'
+        }
       });
     });
   });
