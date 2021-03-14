@@ -31,10 +31,8 @@ export const withData = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) 
 /** Takes an array of parsers and composes them left to right, so each parser's return value is passed into the next one in the chain. The result is a new parser that, when run, yields the result of the final parser in the chain. */
 export const pipe = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
   new Parser(s => {
-    for (const parser of parsers) {
-      if (s.error) return s;
+    for (const parser of parsers)
       s = parser.pf(s as ParserState<T, unknown, unknown>);
-    }
     return s;
   }) as Parser<T, D, R[typeof parsers.length]>;
 
