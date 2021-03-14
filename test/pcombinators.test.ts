@@ -23,7 +23,21 @@ import Parser, {
   regex,
   letter,
   digit,
-  tup,
+  coroutine,
+  whitespace,
+  digits,
+  letters,
+  EOS,
+  many,
+  atLeast,
+  atLeast1,
+  mapTo,
+  errorMapTo,
+  namedSequence,
+  sep1,
+  choice,
+  exactly,
+  between
 } from "../src";
 insp("illusion");
 
@@ -345,5 +359,332 @@ describe("Parser combinators", () => {
         }
       });
     });
+  });
+
+  describe("coroutine", () => {
+    const parser = coroutine(function* () {
+      const thing = (yield letters) as string;
+      yield char("=");
+      const numbers = (yield digits.map(Number)) as number;
+      yield char(";");
+      
+      return {
+        type: "int",
+        name: thing,
+        value: numbers
+      };
+    });
+    it("should return the expected data structure", () => {
+      const state = strparse(parser)("myvariable=1234;");
+      expect(state).to.matchObject({
+        target: {
+          index: "myvariable=1234;".length
+        },
+        data: null,
+        error: null,
+        result: {
+          type: "int",
+          name: "myvariable",
+          value: 1234
+        }
+      });
+    });
+    
+    it("should return the error of the parser that failed", () => {
+      const state = strparse(parser)("myvariable=1234");
+      expect(state).to.matchObject({
+        target: {
+          index: "myvariable=1234".length
+        },
+        data: null,
+        error: {
+          expected: "character ';'",
+          actual: EOS
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("exactly", () => {
+    const parser = exactly(4)(char("a"));
+    it("should accept the exact number of parsings", () => {
+      const state = strparse(parser)("aaaa");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: {
+          exactlyTimes: 4
+        },
+        error: null,
+        result: ["a", "a", "a", "a"]
+      });
+    });
+
+    it("should not take more than the exact number of parsings", () => {
+      const state = strparse(parser)("aaaaaaaa...");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: {
+          exactlyTimes: 4
+        },
+        error: null,
+        result: ["a", "a", "a", "a"]
+      });
+    });
+
+    it("should not accept a smaller number of parsings", () => {
+      const state = strparse(parser)("a?");
+      expect(state).to.matchObject({
+        target: {
+          index: 1
+        },
+        data: null,
+        error: {
+          from: "exactly 4 (char)",
+          actual: "character '?'",
+          expected: "character 'a'",
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("many", () => {
+    const parser = many(char("a"));
+    it("should accept several parsings (1/2)", () => {
+      const state = strparse(parser)("aaaa");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: {
+          manyTimes: 4
+        },
+        error: null,
+        result: ["a", "a", "a", "a"]
+      });
+    });
+
+    it("should accept several parsings (2/2)", () => {
+      const state = strparse(parser)("aaaaaaaa...");
+      expect(state).to.matchObject({
+        target: {
+          index: 8
+        },
+        data: {
+          manyTimes: 8
+        },
+        error: null,
+        result: ["a", "a", "a", "a", "a", "a", "a", "a"]
+      });
+    });
+
+    it("should accept zero parsings", () => {
+      const state = strparse(parser)("wat");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: {
+          manyTimes: 0
+        },
+        error: null,
+        result: []
+      });
+    });
+  });
+
+  describe("atLeast", () => {
+    const parser = atLeast(4)(char("a"));
+    it("should accept at least the indicated number of parsings", () => {
+      const state = strparse(parser)("aaaa");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: {
+          atLeastTimes: 4
+        },
+        error: null,
+        result: ["a", "a", "a", "a"]
+      });
+    });
+
+    it("should accept more than the indicated number of parsings", () => {
+      const state = strparse(parser)("aaaaaaaa...");
+      expect(state).to.matchObject({
+        target: {
+          index: 8
+        },
+        data: {
+          atLeastTimes: 8
+        },
+        error: null,
+        result: ["a", "a", "a", "a", "a", "a", "a", "a"]
+      });
+    });
+
+    it("should not accept less than the indicated number of parsings", () => {
+      const state = strparse(parser)("a?");
+      expect(state).to.matchObject({
+        target: {
+          index: 1
+        },
+        data: null,
+        error: {
+          from: "atLeast 4 (char)",
+          expected: "character 'a'",
+          actual: "character '?'"
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("atLeast1", () => {
+    const parser = atLeast1(char("a"));
+    it("should accept at least the indicated number of parsings", () => {
+      const state = strparse(parser)("aaaa");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: {
+          atLeastTimes: 4
+        },
+        error: null,
+        result: ["a", "a", "a", "a"]
+      });
+    });
+
+    it("should accept more than the indicated number of parsings", () => {
+      const state = strparse(parser)("aaaaaaaa...");
+      expect(state).to.matchObject({
+        target: {
+          index: 8
+        },
+        data: {
+          atLeastTimes: 8
+        },
+        error: null,
+        result: ["a", "a", "a", "a", "a", "a", "a", "a"]
+      });
+    });
+
+    it("should not accept no parsings", () => {
+      const state = strparse(parser)("b?");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "atLeast 1 (char)",
+          expected: "character 'a'",
+          actual: "character 'b'"
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("mapTo", () => {
+    const parser = pipe<StringPStream, null, [string, number]>([digits, mapTo(Number)]);
+    it("should map the previous result", () => {
+      const state = strparse(parser)("12345");
+      expect(state).to.matchObject({
+        target: {
+          index: 5
+        },
+        data: null,
+        error: null,
+        result: 12345
+      });
+    });
+
+    it("should not try to map an unsuccessful parser state", () => {
+      const state = strparse(parser)("abcde");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "digits",
+          expected: "digits",
+          actual: '"abcde..."'
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("errorMapTo", () => {
+    const parser = pipe<StringPStream, null, [string, number]>([
+      digits,
+      errorMapTo(error => new ParsingError({
+        ...error.props,
+        from: `pipe @ ${error.from}`
+      }))
+    ]);
+    it("should do nothing to the previous result", () => {
+      const state = strparse(parser)("12345");
+      expect(state).to.matchObject({
+        target: {
+          index: 5
+        },
+        data: null,
+        error: null,
+        result: "12345"
+      });
+    });
+
+    it("should map the error of an unsuccessful parser state", () => {
+      const state = strparse(parser)("abcde");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "pipe @ digits",
+          expected: "digits",
+          actual: '"abcde..."'
+        },
+        result: null
+      });
+    });
+  });
+
+  describe("sequence", () => {
+
+  });
+
+  describe("namedSequence", () => {
+
+  });
+
+  describe("intersperse", () => {
+
+  });
+
+  describe("sep", () => {
+
+  });
+
+  describe("sep1", () => {
+
+  });
+
+  describe("choice", () => {
+
+  });
+
+  describe("between", () => {
+
   });
 });
