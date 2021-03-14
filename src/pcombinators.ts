@@ -187,12 +187,12 @@ export const many = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
       if (length && index >= length) break;
     }
     const data = s.data as D ?? {};
-      return new ParserState({
-        ...s.props,
-        error: null,
-        result: results,
-        data: { ...data, manyTimes: results.length }
-      });
+    return new ParserState({
+      ...s.props,
+      error: null,
+      result: results,
+      data: { ...data, manyTimes: results.length }
+    });
   }) as Parser<T, D & { manyTimes: number }, R[]>;
 
 /**
@@ -200,18 +200,31 @@ export const many = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
  * That function takes a parser and returns a new parser which matches it **`n` or more** times.
  */
 export const atLeast = (n: number) => <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
-  new Parser(s => {
+  (new Parser(s => {
     if (s.error) return s;
-    const state = many(parser).pf(s);
-    const times = state.data?.manyTimes ?? 0;
-    return times >= n
+    const results: R[] = [];
+    while (true) {
+      s = parser.pf(s);
+      const { length, index } = s.target;
+      if (s.error) break;
+      results.push(s.result as R);
+      if (length && index >= length) break;
+    }
+    const data = s.data as D ?? {};
+
+    return results.length < n
       ? s
-      : s.errorify(new ParsingError({
-          from: `atLeast ${n}`,
-          expected: `to match at least ${n} value${times === 1 ? "" : "s"}`,
-          actual: `${times}`
-        }));
-  }) as Parser<T, D, R[]>;
+      : new ParserState({
+          ...s.props,
+          error: null,
+          result: results,
+          data: { ...data, atLeastTimes: results.length }
+        });
+  }) as Parser<T, D & { atLeastTimes: number }, R[]>)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: `atLeast ${n}${error.from ? ` (${error.from})` : ""}`
+  }));
 
 /** Takes a parser and returns a new parser which matches it **one or more** times. */
 export const atLeast1 = atLeast(1);
