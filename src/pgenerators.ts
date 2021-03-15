@@ -254,7 +254,11 @@ export const bracketed = (bleft: string, bright: string) => {
       .replace(`\\${bleft}`, bleft)
       .replace(`\\${bright}`, bright)
       .replace(/\\([\\\[\](){}|+*.])/g, "$1"));
-  return between(cleft)(cright)(innerParser);
+  return between(cleft)(cright)(innerParser)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: error.from?.replace("between", "bracketed")
+  }));
 }
 
 /**
@@ -265,5 +269,9 @@ export const bracketed = (bleft: string, bright: string) => {
 export const quoted = (q: string) => {
   if (charLength(q) !== 1)
     throw new TypeError(`[quoted] must be called with a single character, got '${q}'`);
-  return bracketed(q, q);
+  return bracketed(q, q)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: error.from?.replace("bracketed", "quoted")
+  }));
 };

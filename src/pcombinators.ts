@@ -310,7 +310,7 @@ export const intersperse = <T extends PStream<any>, D, R extends any[], S>(separ
  */
 export const sep = <T extends PStream<any>, D, R, S>(separator: Parser<T, D, S>) =>
   (parser: Parser<T, D, R>) =>
-  new Parser(s => {
+  (new Parser(s => {
     if (s.error) return s;
     const results: R[] = [];
     while (true) {
@@ -322,7 +322,11 @@ export const sep = <T extends PStream<any>, D, R, S>(separator: Parser<T, D, S>)
       if (s.error) break;
     }
     return s.resultify(results);
-  }) as Parser<T, D, R[]>;
+  }) as Parser<T, D, R[]>)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: `sep @ ${error.from}`
+  }));
 
 /**
  * Takes a separating parser then a value parser, and returns a new parser that will match the value parser **one or more** times, **separated** by the separating parser.
@@ -331,22 +335,26 @@ export const sep = <T extends PStream<any>, D, R, S>(separator: Parser<T, D, S>)
  */
 export const sep1 = <T extends PStream<any>, D, R, S>(separator: Parser<T, D, S>) =>
   (parser: Parser<T, D, R>) =>
-  new Parser(s => {
+  (new Parser(s => {
     if (s.error) return s;
-    const out = sep(separator)(parser).pf(s);
-    if (out.error) return out;
-    const length = out.result?.length ?? 0;
-    return length > 0
-      ? out
-      : s.errorify(new ParsingError({
-          from: "sep1",
-          expected: "to match at least one separated value"
-        }));
-  }) as Parser<T, D, R[]>;
+    const results: R[] = [];
+    while (true) {
+      s = parser.pf(s);
+      if (s.error) return s;
+      results.push(s.result as R);
+      s = separator.pf(s);
+      if (s.error) break;
+    }
+    return s.resultify(results);
+  }) as Parser<T, D, R[]>)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: `sep1 @ ${error.from}`
+  }));
 
 /** Takes an array of parsers, and returns a new parser that tries to match each one of them sequentially, and returns the first match. If `choice` fails, then it returns the error message of the parser that matched the most from the string. */
 export const choice = <T extends PStream<any>, D, R extends any[]>(parsers: ParserTuple<T, D, R>) =>
-  new Parser(s => {
+  (new Parser(s => {
     if (s.error) return s;
     let errorState = null;
     const originalIndex = s.index;
@@ -358,10 +366,18 @@ export const choice = <T extends PStream<any>, D, R extends any[]>(parsers: Pars
         errorState = out;
     }
     return errorState as ErrorState<T, D>;
-  }) as Parser<T, D, R[number]>;
+  }) as Parser<T, D, R[number]>)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: `choice @ ${error.from}`
+  }));
 
 /** Takes 3 parsers, a *left* parser, a *right* parser, and a *value* parser, returning a new parser that matches a value matched by the *value* parser, between values matched by the *left* parser and the *right* parser. */
 export const between = <T extends PStream<any>, D, R>(leftp: Parser<T, D, any>) =>
   (rightp: Parser<T, D, any>) =>
   (parser: Parser<T, D, R>) =>
-  sequence<T, D, [any, R, any]>([leftp, parser, rightp]).map(([_, x]) => x);
+  sequence<T, D, [any, R, any]>([leftp, parser, rightp]).map(([_, x]) => x)
+  .errorMap(error => new ParsingError({
+    ...error.props,
+    from: `between @ ${error.from}`
+  }));
