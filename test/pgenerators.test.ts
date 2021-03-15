@@ -606,7 +606,7 @@ describe("Parser generators", () => {
         },
         result: null,
         error: {
-          from: "char", // TODO: Maybe change the origin there?
+          from: "bracketed @ char",
           expected: "character '<'",
           actual: "character 'n'"
         }
@@ -621,7 +621,7 @@ describe("Parser generators", () => {
         },
         result: null,
         error: {
-          from: "char", // TODO: Maybbe change the origin there (again)?
+          from: "bracketed @ char",
           expected: "character '>'",
           actual: EOS
         }
@@ -673,7 +673,7 @@ describe("Parser generators", () => {
         },
         result: null,
         error: {
-          from: "char", // TODO: Maybe change the origin there?
+          from: "quoted @ char",
           expected: "character '''",
           actual: "character 'n'"
         }
@@ -688,7 +688,7 @@ describe("Parser generators", () => {
         },
         result: null,
         error: {
-          from: "char", // TODO: Maybe change the origin there (again)?
+          from: "quoted @ char",
           expected: "character '''",
           actual: EOS
         }

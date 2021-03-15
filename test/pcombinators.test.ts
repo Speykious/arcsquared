@@ -17,6 +17,9 @@ import Parser, {
   parse,
   setData,
   str,
+  sequence,
+  intersperse,
+  sep,
   StringPStream,
   strparse,
   withData,
@@ -661,30 +664,295 @@ describe("Parser combinators", () => {
   });
 
   describe("sequence", () => {
+    const parser = sequence<StringPStream, null, string[]>([str("hello"), char("_"), str("world")]);
+    it("should parse correctly", () => {
+      const state = strparse(parser)("hello_world");
+      expect(state).to.matchObject({
+        target: {
+          index: "hello_world".length
+        },
+        data: null,
+        error: null,
+        result: ["hello", "_", "world"]
+      });
+    });
 
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("hello_waitwat");
+      expect(state).to.matchObject({
+        target: {
+          index: "hello_".length
+        },
+        data: null,
+        error: {
+          from: "str",
+          expected: '"world"',
+          actual: '"waitw..."'
+        },
+        result: null
+      });
+    });
   });
 
   describe("namedSequence", () => {
+    const parser = namedSequence<StringPStream, null, string[]>([
+      ["hell", str("hello")],
+      ["whocares", char("_")],
+      ["o", str("world")]
+    ]);
+    it("should parse correctly", () => {
+      const state = strparse(parser)("hello_world");
+      expect(state).to.matchObject({
+        target: {
+          index: "hello_world".length
+        },
+        data: null,
+        error: null,
+        result: {
+          hell: "hello",
+          whocares: "_",
+          o: "world"
+        }
+      });
+    });
 
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("hello_waitwat");
+      expect(state).to.matchObject({
+        target: {
+          index: "hello_".length
+        },
+        data: null,
+        error: {
+          from: "str",
+          expected: '"world"',
+          actual: '"waitw..."'
+        },
+        result: null
+      });
+    });
   });
 
   describe("intersperse", () => {
+    const parser = intersperse(char(","))([letters, digits.map(Number), str("end")]);
+    it("should not include the separator", () => {
+      const state = strparse(parser)("something,69420,end");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,69420,end".length
+        },
+        data: null,
+        error: null,
+        result: ["something", 69420, "end"]
+      });
+    });
 
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("something,iswrong,here");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,".length
+        },
+        data: null,
+        error: {
+          from: "digits",
+          expected: "digits",
+          actual: '"iswro..."'
+        },
+        result: null
+      });
+    });
   });
 
   describe("sep", () => {
+    const parser = sep(char(","))(letters);
+    it("should not include the separator", () => {
+      const state = strparse(parser)("something,or,else");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,or,else".length
+        },
+        data: null,
+        error: null,
+        result: ["something", "or", "else"]
+      });
+    });
 
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("something,69420,iswrong,here");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,".length
+        },
+        data: null,
+        error: {
+          from: "sep @ letters",
+          expected: "letters",
+          actual: '"69420..."'
+        },
+        result: null
+      });
+    });
+
+    it("should accept empty result", () => {
+      const state = strparse(parser)(".notletters");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: null,
+        result: []
+      });
+    });
   });
 
   describe("sep1", () => {
+    const parser = sep1(char(","))(letters);
+    it("should not include the separator", () => {
+      const state = strparse(parser)("something,or,else");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,or,else".length
+        },
+        data: null,
+        error: null,
+        result: ["something", "or", "else"]
+      });
+    });
 
+    it("should return the error of the failing parser", () => {
+      const state = strparse(parser)("something,69420,iswrong,here");
+      expect(state).to.matchObject({
+        target: {
+          index: "something,".length
+        },
+        data: null,
+        error: {
+          from: "sep1 @ letters",
+          expected: "letters",
+          actual: '"69420..."'
+        },
+        result: null
+      });
+    });
+
+    it("should not accept empty result", () => {
+      const state = strparse(parser)(".notletters");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "sep1 @ letters",
+          expected: "letters",
+          actual: '".notl..."'
+        },
+        result: null,
+      });
+    });
   });
 
   describe("choice", () => {
+    const parser = choice<StringPStream, null, string[]>([letters, digits, str("???")]);
+    it("should accept all possibilities (1/3)", () => {
+      const state = strparse(parser)("some letters here");
+      expect(state).to.matchObject({
+        target: {
+          index: 4
+        },
+        data: null,
+        error: null,
+        result: "some"
+      });
+    });
 
+    it("should accept all possibilities (2/3)", () => {
+      const state = strparse(parser)("42 69 420 13");
+      expect(state).to.matchObject({
+        target: {
+          index: 2
+        },
+        data: null,
+        error: null,
+        result: "42"
+      });
+    });
+
+    it("should accept all possibilities (3/3)", () => {
+      const state = strparse(parser)("??? wait wat");
+      expect(state).to.matchObject({
+        target: {
+          index: 3
+        },
+        data: null,
+        error: null,
+        result: "???"
+      });
+    });
+
+    it("should return the first fail if every possibility fails", () => {
+      const state = strparse(parser)(":haha_no:");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "choice @ letters",
+          expected: "letters",
+          actual: '":haha..."'
+        },
+        result: null
+      });
+    });
   });
 
   describe("between", () => {
+    const parser = between(char("("))(char(")"))(letters);
+    it("should return the middle parsing result", () => {
+      const state = strparse(parser)("(nani)");
+      expect(state).to.matchObject({
+        target: {
+          index: "(nani)".length
+        },
+        data: null,
+        error: null,
+        result: "nani"
+      });
+    });
 
+    it("should fail if it can't parse the left side", () => {
+      const state = strparse(parser)("nani)");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: {
+          from: "between @ char",
+          expected: "character '('",
+          actual: "character 'n'"
+        },
+        result: null
+      });
+    });
+
+    it("should fail if it can't parse the right side", () => {
+      const state = strparse(parser)("(nani");
+      expect(state).to.matchObject({
+        target: {
+          index: 5
+        },
+        data: null,
+        error: {
+          from: "between @ char",
+          expected: "character ')'",
+          actual: EOS
+        },
+        result: null
+      });
+    });
   });
 });
