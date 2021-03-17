@@ -21,6 +21,7 @@ import Parser, {
   intersperse,
   sep,
   StringPStream,
+  ParserState,
   strparse,
   withData,
   regex,
@@ -40,7 +41,8 @@ import Parser, {
   sep1,
   choice,
   exactly,
-  between
+  between,
+  possibly
 } from "../src";
 insp("illusion");
 
@@ -953,6 +955,41 @@ describe("Parser combinators", () => {
         },
         result: null
       });
+    });
+  });
+
+  describe("possibly", () => {
+    const parser = possibly(char("a"));
+    it("should return the result when successful", () => {
+      const state = strparse(parser)("a.");
+      expect(state).to.matchObject({
+        target: {
+          index: 1
+        },
+        data: null,
+        error: null,
+        result: "a"
+      });
+    });
+
+    it("should stay in a successful state and not consume any input when not matching", () => {
+      const state = strparse(parser)("b?");
+      expect(state).to.matchObject({
+        target: {
+          index: 0
+        },
+        data: null,
+        error: null,
+        result: null
+      });
+    });
+
+    it("should not update an error state", () => {
+      const state = new ParserState({
+        target: new StringPStream("* presses ENTER *"),
+        error: new ParsingError({ message: "It's you!" })
+      });
+      expect(parser.pf(state)).to.matchObject(state);
     });
   });
 });

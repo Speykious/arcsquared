@@ -381,3 +381,15 @@ export const between = <T extends PStream<any>, D, R>(leftp: Parser<T, D, any>) 
     ...error.props,
     from: `between @ ${error.from}`
   }));
+
+/** Takes a parser, and will transform it into one that, if it doesn't succeed to match, just returns null without consuming any input instead of failing.
+ * However, if the parser state is already in an error state, it won't modify it and just return it as is. */
+export const possibly = <T extends PStream<any>, D, R>(parser: Parser<T, D, R>) =>
+  new Parser(s => {
+    if (s.error) return s;
+    const { index } = s;
+    const state = parser.pf(s as ParserState<T, D, R>);
+    return state.error
+      ? state.update(null, index)
+      : state;
+  }) as Parser<T, D, R | null>;
